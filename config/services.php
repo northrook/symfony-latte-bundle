@@ -40,6 +40,6 @@ return static function ( ContainerConfigurator $container ) : void {
 		                  service( 'logger' )->nullOnInvalid(),
 	                  ] )
 	          ->public()
-	          ->alias( CoreExtension::class, 'core.latte' )
+	          ->alias( CoreExtension::class, 'core.latte.extension' )
 	;
 };
