@@ -9,6 +9,7 @@ declare ( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Nodes;
 
+use Generator;
 use Latte\CompileException;
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\StatementNode;
@@ -27,7 +28,8 @@ final class ClassNode extends StatementNode {
             throw new CompileException( 'It is not possible to combine id with n:class, or class.', $tag->position );
         }
 
-//        $tag->expectArguments();
+	     dump( $tag );
+
         $node       = new ClassNode;
         $node->args = $tag->parser->parseArguments();
 
@@ -35,17 +37,14 @@ final class ClassNode extends StatementNode {
     }
 
     public function print( PrintContext $context ): string {
-        // var_dump( $context );
-
         return $context->format(
             'echo ($ʟ_tmp = array_filter(%node)) ? \' class="\' . Northrook\Support\HTML\Element::classes(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
-            // 'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . LR\Filters::escapeHtmlAttr(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
             $this->args,
             $this->position,
         );
     }
 
-    public function &getIterator(): \Generator
+    public function &getIterator(): Generator
     {
         yield $this->args;
     }
