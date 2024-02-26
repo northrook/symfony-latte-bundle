@@ -53,10 +53,15 @@ class Environment
 	 */
 	public function render( string $template, object | array $parameters = [] ) : string {
 
-		return $this->engine()->renderToString(
+		$render = $this->engine()->renderToString(
 			$this->templateFilePath( $template ),
 			$this->templateParameters( $parameters ),
 		);
+
+
+		$this->stopwatch?->stop( 'latte' );
+
+		return $render;
 	}
 
 	public static function addTemplate( array $array ) : void {
@@ -91,6 +96,8 @@ class Environment
 	}
 
 	private function engine() : Latte\Engine {
+
+		$this->stopwatch?->start( 'latte' );
 
 		$this->latte = new Latte\Engine();
 

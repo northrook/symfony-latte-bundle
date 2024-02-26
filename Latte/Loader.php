@@ -147,23 +147,27 @@ class Loader implements Latte\Loader
 
 		foreach ( $tags as $tag ) {
 
-
 			$content = preg_replace_callback(
-				"/$tag=(?:\")(.*?)(?:\")/ms",
-				function ( array $m ) use ( $tag ) {
-					$var = trim( $m[ 1 ], ' {}' );
-					if ( str_contains( $var, '$' ) && !str_contains( $var, '??' ) ) {
-						$var .= '??false';
+				"/$tag=\"(.*?)\"/ms",
+				function ( array $match ) use ( $tag ) {
+					$value = trim( $match[ 1 ], " {}'" );
+
+					// TODO: Improve auto-null to allow for filters (check from $ to pipe)
+					if ( str_contains( $value, '$' ) ) {
+						if (!str_contains( $value, '??' )){
+							$value .= '??false';
+						}
+					} else {
+						$value = "'$value'";
 					}
-					// dump( $var );
-					return "{$tag}=\"{$var}\"";
+
+					return "$tag=\"$value\"";
 				},
 				$content,
 			);
 
 		}
 
-		// dd( $content );
 		return $content;
 	}
 
