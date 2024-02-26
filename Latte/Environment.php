@@ -11,7 +11,6 @@ use Latte;
 use Latte\Extension;
 use Northrook\Support\Attribute\EntryPoint;
 use Northrook\Support\File;
-use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -37,6 +36,7 @@ class Environment
 	public function __construct(
 		private readonly string    $templateDirectory,
 		private readonly string    $cacheDirectory,
+		protected ?CoreExtension   $coreExtension = null,
 		protected ?LoggerInterface $logger = null,
 		protected ?Stopwatch       $stopwatch = null,
 	) {}
@@ -94,7 +94,7 @@ class Environment
 
 		$this->latte = new Latte\Engine();
 
-		$this->addExtension( new CoreExtension() );
+		$this->addExtension( $this->coreExtension ?? new CoreExtension() );
 
 		foreach ( $this->extensions as $extension ) {
 			$this->latte->addExtension( $extension );

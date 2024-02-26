@@ -26,6 +26,7 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->args( [
 		                  param( 'dir.templates' ),
 		                  param( 'dir.cache.latte' ),
+						  service( 'core.latte.extension' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
 	                  ] )

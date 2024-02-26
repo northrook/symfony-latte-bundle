@@ -10,13 +10,18 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
 final class CoreExtension extends Latte\Extension
 {
 	public function __construct(
-		private UrlGeneratorInterface $url,
-		private ?LoggerInterface      $logger,
-	) {}
+		private ?UrlGeneratorInterface $url = null,
+		private ?LoggerInterface      $logger = null,
+	) {
+		if ( $this->url === null ) {
+			throw new \RuntimeException( 'UrlGeneratorInterface is required' );
+		}
+	}
 
 	public function getTags() : array {
 		return [
@@ -45,4 +50,9 @@ final class CoreExtension extends Latte\Extension
 
 	}
 
+	public static function getSubscribedServices() : array {
+		return [
+
+		];
+	}
 }
