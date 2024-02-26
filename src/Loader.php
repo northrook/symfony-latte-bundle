@@ -6,6 +6,8 @@ use Latte;
 use Latte\CompileException;
 use LogicException;
 use Northrook\Support\Attribute\EntryPoint;
+use Northrook\Support\File;
+use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
@@ -193,7 +195,7 @@ class Loader implements Latte\Loader
 		}
 		else {
 
-			$file = $this->baseDir . $name;
+			$file = Str::filepath( $name, $this->baseDir);
 
 			if ( $this->baseDir && !str_starts_with( $this->normalizePath( $file ), $this->baseDir ) ) {
 				throw new Latte\RuntimeException(
