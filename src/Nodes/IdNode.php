@@ -9,6 +9,7 @@ declare ( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Nodes;
 
+use Generator;
 use Latte\CompileException;
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\StatementNode;
@@ -22,6 +23,9 @@ final class IdNode extends StatementNode
 {
 	public ArrayNode $args;
 
+	/**
+	 * @throws CompileException
+	 */
 	public static function create( Tag $tag ) : IdNode {
 
 		if ( $tag->htmlElement->getAttribute( 'id' ) ) {
@@ -38,13 +42,12 @@ final class IdNode extends StatementNode
 	public function print( PrintContext $context ) : string {
 		return $context->format(
 			'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . Northrook\Support\HTML\Element::id(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
-			// 'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . LR\Filters::escapeHtmlAttr(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
 			$this->args,
 			$this->position,
 		);
 	}
 
-	public function &getIterator() : \Generator {
+	public function &getIterator() : Generator {
 		yield $this->args;
 	}
 }
