@@ -18,33 +18,33 @@ use Latte\Compiler\Tag;
 /**
  * n:id="..."
  */
-final class IdNode extends StatementNode {
-    public ArrayNode $args;
+final class IdNode extends StatementNode
+{
+	public ArrayNode $args;
 
-    public static function create( Tag $tag ): IdNode {
+	public static function create( Tag $tag ) : IdNode {
 
-        if ( $tag->htmlElement->getAttribute( 'id' ) ) {
-            throw new CompileException( 'It is not possible to combine id with n:id.', $tag->position );
-        }
+		if ( $tag->htmlElement->getAttribute( 'id' ) ) {
+			throw new CompileException( 'It is not possible to combine id with n:id.', $tag->position );
+		}
 
-        $tag->expectArguments();
-        $node       = new IdNode;
-        $node->args = $tag->parser->parseArguments();
+//		$tag->expectArguments();
+		$node = new IdNode();
+		$node->args = $tag->parser->parseArguments();
 
-        return $node;
-    }
+		return $node;
+	}
 
-    public function print( PrintContext $context ): string {
-        return $context->format(
-            'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . Northrook\Support\HTML\Element::id(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
-            // 'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . LR\Filters::escapeHtmlAttr(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
-            $this->args,
-            $this->position,
-        );
-    }
+	public function print( PrintContext $context ) : string {
+		return $context->format(
+			'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . Northrook\Support\HTML\Element::id(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
+			// 'echo ($ʟ_tmp = array_filter(%node)) ? \' id="\' . LR\Filters::escapeHtmlAttr(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
+			$this->args,
+			$this->position,
+		);
+	}
 
-    public function &getIterator(): \Generator
-    {
-        yield $this->args;
-    }
+	public function &getIterator() : \Generator {
+		yield $this->args;
+	}
 }

@@ -8,6 +8,6 @@
         addLatteFilter("echo", "Simply echo the provided string.");
     </filters>
     <functions>
-        addNetteFunction("route", "string", "( string $route)", "Computes a Symfony Route");
+        addNetteFunction("route", "string", "( ?string $route)", "Computes a Symfony Route");
     </functions>
 </latte>
