@@ -20,7 +20,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * * AbstractCoreController
  *
  */
-#[EntryPoint] // Called by the Controller
+#[EntryPoint] // Called by the AbstractCoreController
 class Environment
 {
 
@@ -93,6 +93,8 @@ class Environment
 	private function engine() : Latte\Engine {
 
 		$this->latte = new Latte\Engine();
+
+		$this->addExtension( new CoreExtension() );
 
 		foreach ( $this->extensions as $extension ) {
 			$this->latte->addExtension( $extension );

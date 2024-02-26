@@ -132,6 +132,7 @@ class Loader implements Latte\Loader
 			if ( is_string( $extension ) ) {
 				$tags[] = $extension;
 			}
+
 			else if ( !is_array( $extension ) ) {
 				continue;
 			}
