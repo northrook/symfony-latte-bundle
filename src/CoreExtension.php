@@ -2,8 +2,8 @@
 
 namespace Northrook\Symfony\Latte;
 
-use App\framework\Latte\Nodes\IdNode;
 use Latte;
+use Northrook\Symfony\Latte\Nodes\IdNode;
 
 final class CoreExtension extends Latte\Extension
 {

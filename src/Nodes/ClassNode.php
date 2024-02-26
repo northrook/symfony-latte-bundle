@@ -7,7 +7,7 @@
 
 declare ( strict_types = 1 );
 
-namespace App\framework\Latte\Nodes;
+namespace Northrook\Symfony\Latte\Nodes;
 
 use Latte\CompileException;
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
@@ -27,7 +27,7 @@ final class ClassNode extends StatementNode {
             throw new CompileException( 'It is not possible to combine id with n:class, or class.', $tag->position );
         }
 
-        $tag->expectArguments();
+//        $tag->expectArguments();
         $node       = new ClassNode;
         $node->args = $tag->parser->parseArguments();
 

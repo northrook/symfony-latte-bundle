@@ -7,7 +7,7 @@
 
 declare ( strict_types = 1 );
 
-namespace App\framework\Latte\Nodes;
+namespace Northrook\Symfony\Latte\Nodes;
 
 use Latte\CompileException;
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
