@@ -31,6 +31,7 @@ return static function ( ContainerConfigurator $container ) : void {
 						  service( 'core.latte.extension' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
+		                  service( 'core.latte.global_parameters' )->nullOnInvalid(),
 	                  ] )
 	          ->public()
 	          ->alias( Environment::class, 'core.latte' )
