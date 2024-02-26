@@ -1,2 +1,1 @@
-# symfony-latte-bundle
-Latte integration for Symfony.
+# Latte integration for Symfony
