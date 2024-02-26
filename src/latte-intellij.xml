@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE latte PUBLIC "-//LATTE//Latte plugin XML V0.0.1//EN" ".idea/intellij-latte/xmlSources/Latte.dtd">
+<latte version="1" vendor="northrook/symfony-latte-bundle">
+    <tags>
+        <tag name="id" type="ATTR_ONLY" arguments="id" />
+    </tags>
+    <filters>
+        addLatteFilter("echo", "Simply echo the provided string.");
+    </filters>
+    <functions>
+        addNetteFunction("route", "string", "( string $route)", "Computes a Symfony Route");
+    </functions>
+</latte>
