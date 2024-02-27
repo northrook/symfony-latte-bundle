@@ -45,7 +45,7 @@ final class CoreExtension extends Latte\Extension
 
 	public function getFunctions() : array {
 		return [
-			'route'        => [ $this, 'getRoute' ],
+			'path'        => [ $this, 'resolvePathFromRoute' ],
 			'encoded_href' => static function ( $string ) {
 				echo CoreExtension::encodeHref( $string );
 			},
