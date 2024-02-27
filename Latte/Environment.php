@@ -8,6 +8,7 @@ declare( strict_types = 1 );
 namespace Northrook\Symfony\Latte;
 
 use Latte;
+use Latte\Engine;
 use Latte\Extension;
 use Northrook\Support\Attribute\EntryPoint;
 use Northrook\Support\File;
@@ -23,7 +24,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class Environment
 {
 
-	public readonly Latte\Engine $latte;
+	private ?Latte\Engine $latte = null;
 
 	private static array $templates = [];
 
@@ -34,8 +35,8 @@ class Environment
 	private array $preprocessors = [];
 
 	public function __construct(
-		private readonly string    $templateDirectory,
-		private readonly string    $cacheDirectory,
+		public string              $templateDirectory,
+		public string              $cacheDirectory,
 		protected ?CoreExtension   $coreExtension = null,
 		protected ?LoggerInterface $logger = null,
 		protected ?Stopwatch       $stopwatch = null,
@@ -53,13 +54,14 @@ class Environment
 	 */
 	public function render( string $template, object | array $parameters = [] ) : string {
 
-		$render = $this->engine()->renderToString(
+		$this->latte ??= $this->startEngine();
+
+		$render = $this->latte->renderToString(
 			$this->templateFilePath( $template ),
 			$this->templateParameters( $parameters ),
 		);
 
-
-		$this->stopwatch?->stop( 'latte' );
+		$this->stopwatch?->stop( 'engine' );
 
 		return $render;
 	}
@@ -95,11 +97,37 @@ class Environment
 		return $this;
 	}
 
-	private function engine() : Latte\Engine {
+	/** Start the Latte engine.
+	 *
+	 * * Automatically started when $this->render() is called.
+	 * * Can be manually started with $this->startEngine().
+	 * * Engine is stored in `$this->latte`.
+	 * * If called when already started, it will just return {@see Engine}.
+	 *
+	 * Actions:
+	 * * Start the Latte engine, stored in `$this->latte`
+	 * * Adds the {@see CoreExtension} to the `$this->extensions` array
+	 * * Adds all extensions from `$this->extensions`
+	 * * Sets the template directory to `$this->templateDirectory`
+	 * * Sets the cache directory to `$this->cacheDirectory`
+	 * * Sets the Loader to a custom Latte {@see Loader}
+	 * * Passes registered {@see Preprocessor} and {@see self::$templates} to the {@see Loader}
+	 * * Passes the {@see LoggerInterface} to the {@see Loader}
+	 *
+	 *
+	 * @param  Engine|null  $engine  The engine to use, defaults to Latte
+	 * @param  mixed  ...$args  Arguments to pass to the custom engine
+	 * @return Engine
+	 */
+	public function startEngine( ?Latte\Engine $engine = null, mixed ...$args ) : Latte\Engine {
 
-		$this->stopwatch?->start( 'latte' );
+		if ( $this->latte ) {
+			return $this->latte;
+		}
 
-		$this->latte = new Latte\Engine();
+		$this->stopwatch?->start('engine', 'latte' );
+
+		$this->latte = new $engine( ... $args ) ?? new Latte\Engine();
 
 		$this->addExtension( $this->coreExtension ?? new CoreExtension() );
 
@@ -120,6 +148,15 @@ class Environment
 		;
 
 		return $this->latte;
+	}
+
+	public function stopEngine() : self {
+		if ( $this->latte ) {
+			unset( $this->latte );
+		}
+		$this->stopwatch?->reset();
+		$this->latte = null;
+		return $this;
 	}
 
 	private function templateParameters( object | array $parameters ) : object | array {
