@@ -7,6 +7,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
+use Northrook\Symfony\Latte\Parameters\GlobalParameters;
+use Northrook\Symfony\Latte\Template;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -43,4 +45,25 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->public()
 	          ->alias( CoreExtension::class, 'core.latte.extension' )
 	;
+
+	$container->services()
+	          ->set( 'core.latte.global_parameters', GlobalParameters::class )
+	          ->args( [
+		                  service( 'request_stack' ),
+		                  service( 'router' ),
+		                  service( 'security.csrf.token_generator' )->nullOnInvalid(),
+		                  service( 'logger' )->nullOnInvalid(),
+	                  ] )
+	          ->public()
+	          ->alias( GlobalParameters::class, 'core.latte.global_parameters' )
+	;
+
+//	$container->services()
+//	          ->set( 'core.latte.template', Template::class )
+//	          ->args( [
+//		                  service( 'core.latte.global_parameters' ),
+//	                  ] )
+//	          ->public()
+//	          ->alias( Template::class, 'core.latte.template' )
+//	;
 };

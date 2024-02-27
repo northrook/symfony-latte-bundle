@@ -12,6 +12,7 @@ use Latte\Engine;
 use Latte\Extension;
 use Northrook\Support\Attribute\EntryPoint;
 use Northrook\Support\File;
+use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -24,9 +25,11 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class Environment
 {
 
-	private ?Latte\Engine $latte = null;
+	private ?Latte\Engine $latte      = null;
+	private array         $parameters = [];
 
-	private static array $templates = [];
+	private static GlobalParameters $globalParameter;
+	private static array            $templates = [];
 
 	/** @var Extension[] */
 	private array $extensions = [];
@@ -34,14 +37,14 @@ class Environment
 	/** @var Preprocessor[] */
 	private array $preprocessors = [];
 
-	public ?object $defaultParameters = null;
 
 	public function __construct(
-		public string              $templateDirectory,
-		public string              $cacheDirectory,
-		protected ?CoreExtension   $coreExtension = null,
-		protected ?LoggerInterface $logger = null,
-		protected ?Stopwatch       $stopwatch = null,
+		public string                      $templateDirectory,
+		public string                      $cacheDirectory,
+		protected ?CoreExtension           $coreExtension = null,
+		protected ?LoggerInterface         $logger = null,
+		protected ?Stopwatch               $stopwatch = null,
+		private readonly ?GlobalParameters $globalParameters = null,
 	) {}
 
 
@@ -51,10 +54,10 @@ class Environment
 	 * * Parses `$parameters` into Latte variables.
 	 *
 	 * @param  string  $template
-	 * @param  object|array  $parameters
+	 * @param  object|array|null  $parameters
 	 * @return string
 	 */
-	public function render( string $template, object | array |null $parameters = null ) : string {
+	public function render( string $template, object | array | null $parameters = null ) : string {
 
 		$this->latte ??= $this->startEngine();
 
@@ -74,6 +77,10 @@ class Environment
 		}
 	}
 
+	public static function getGlobalParameter() : GlobalParameters {
+		return self::$globalParameter;
+	}
+
 	public static function parameters( array $parameters ) : array {
 
 		foreach ( $parameters as $key => $value ) {
@@ -83,6 +90,13 @@ class Environment
 		}
 
 		return $parameters;
+	}
+
+	public function setGlobalParameter( GlobalParameters $globalParameter, string $name = 'get' ) : self {
+
+		$this->parameters[ $name ] = $globalParameter;
+
+		return $this;
 	}
 
 	public function addPrecompiler( Preprocessor ...$preprocessor ) : self {
@@ -127,7 +141,7 @@ class Environment
 			return $this->latte;
 		}
 
-		$this->stopwatch?->start('engine', 'latte' );
+		$this->stopwatch?->start( 'engine', 'latte' );
 
 		$this->latte = new ( $engine ?? Latte\Engine::class )( ...$args );
 
@@ -149,6 +163,7 @@ class Environment
 		            )
 		;
 
+
 		return $this->latte;
 	}
 
@@ -161,13 +176,46 @@ class Environment
 		return $this;
 	}
 
+	/**
+	 * @param  object|array|null  $parameters
+	 * @return object|array
+	 */
 	private function templateParameters( object | array | null $parameters ) : object | array {
 
-		// $parameters = array_merge( $this->globalParameters(), $this->parameters, $parameters );
+		if ( null === $parameters && $this->globalParameters ) {
 
-		// dd( $parameters );
+			Environment::$globalParameter = $this->globalParameters;
 
-		return $parameters ?? $this->defaultParameters;
+			return $this->globalParameters;
+		}
+
+		if ( is_object( $parameters ) ) {
+			Environment::$globalParameter = $this->globalParameters;
+			return $parameters;
+		}
+
+		$parameters = array_merge( $this->parameters, (array) $parameters );
+
+		$global = false;
+
+		foreach ( $parameters as $key => $value ) {
+			if ( $value instanceof GlobalParameters ) {
+				$global = $key;
+				break;
+			}
+		}
+
+		if ( false === $global ) {
+			$global = 'get';
+			$parameters = array_merge(
+				[ $global => $this->globalParameters ],
+				$parameters,
+			);
+		}
+
+		Environment::$globalParameter = $parameters[ $global ];
+
+		return $parameters;
 	}
 
 	/** Get the path to a template file, or a template string.

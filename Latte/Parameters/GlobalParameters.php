@@ -30,10 +30,9 @@ use function is_bool;
  * @property ?UserInterface $user
  * @property ?SessionInterface $session
  *  */
-final class GlobalParameters
+class GlobalParameters
 {
 	private Request $requestCache;
-
 
 	public function __get( string $name ) {
 		$name = "get" . ucfirst( $name );
@@ -47,7 +46,6 @@ final class GlobalParameters
 	public function __construct(
 		private RequestStack           $requestStack,
 		private UrlGeneratorInterface  $urlGenerator,
-		private ?EnvironmentService    $env,
 		private ?TokenStorageInterface $tokenStorage = null,
 		private ?LoggerInterface       $logger = null,
 	) {}

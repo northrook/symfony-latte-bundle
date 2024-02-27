@@ -29,6 +29,7 @@ abstract class AbstractLatteTemplate implements ServiceSubscriberInterface {
 		if ( $this->container->has( 'environment_service' ) ) {
 			$this->env = $this->container->get( 'environment_service' );
 		}
+
 		if ( $this->container->has( 'global_parameters' ) ) {
 			$this->get = $this->container->get( 'global_parameters' );
 		}
