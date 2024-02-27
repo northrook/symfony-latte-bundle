@@ -16,6 +16,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class CoreExtension extends Latte\Extension
 {
+
+	private readonly Template $template;
+
 	public function __construct(
 		private readonly ?UrlGeneratorInterface $url = null,
 		private readonly ?LoggerInterface       $logger = null,
@@ -29,6 +32,7 @@ final class CoreExtension extends Latte\Extension
 	 * Initializes before template is rendered.
 	 */
 	public function beforeRender( Template $template ) : void {
+		$this->template = $template;
 		// dd( $template );
 	}
 
@@ -100,6 +104,7 @@ final class CoreExtension extends Latte\Extension
 				message : "Unable to resolve route {name}",
 				context : [
 					          'name'      => $route,
+							  'template'  => $this->template,
 					          'exception' => $e,
 				          ],
 			);
