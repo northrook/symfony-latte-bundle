@@ -64,10 +64,10 @@ final class CoreExtension extends Latte\Extension
 			'dump'         => static fn ( ...$args ) => dump( $args ),
 			'dd'           => static fn ( ...$args ) => dd( $args ),
 
-//			'asset'      => [$this->asset, 'asset'],
-//			'icon'       => [Get::class, 'icon'],
-//			'avatar'     => [RenderComponents::class, 'avatar'],
-//			'menu'       => [RenderComponents::class, 'menu'],
+			//			'asset'      => [$this->asset, 'asset'],
+			//			'icon'       => [Get::class, 'icon'],
+			//			'avatar'     => [RenderComponents::class, 'avatar'],
+			//			'menu'       => [RenderComponents::class, 'menu'],
 		];
 	}
 
@@ -82,9 +82,14 @@ final class CoreExtension extends Latte\Extension
 		];
 	}
 
-	public function getRoute( string $name ) : string {
+	public function resolvePathFromRoute( string $route, bool $absoluteUrl = false ) : string {
 		try {
-			return $this->url->generate( $name );
+			return $this->url->generate(
+				name          : $route,
+				referenceType : $absoluteUrl
+					                ? UrlGeneratorInterface::ABSOLUTE_URL
+					                : UrlGeneratorInterface::ABSOLUTE_PATH,
+			);
 		}
 		catch (
 		InvalidParameterException |
@@ -94,11 +99,11 @@ final class CoreExtension extends Latte\Extension
 			$this->logger?->error(
 				message : "Unable to resolve route {name}",
 				context : [
-					          'name'      => $name,
+					          'name'      => $route,
 					          'exception' => $e,
 				          ],
 			);
-			return $name;
+			return $route;
 		}
 
 	}
