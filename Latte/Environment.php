@@ -34,6 +34,8 @@ class Environment
 	/** @var Preprocessor[] */
 	private array $preprocessors = [];
 
+	public ?object $defaultParameters = null;
+
 	public function __construct(
 		public string              $templateDirectory,
 		public string              $cacheDirectory,
@@ -52,7 +54,7 @@ class Environment
 	 * @param  object|array  $parameters
 	 * @return string
 	 */
-	public function render( string $template, object | array $parameters = [] ) : string {
+	public function render( string $template, object | array |null $parameters = null ) : string {
 
 		$this->latte ??= $this->startEngine();
 
@@ -159,13 +161,13 @@ class Environment
 		return $this;
 	}
 
-	private function templateParameters( object | array $parameters ) : object | array {
+	private function templateParameters( object | array | null $parameters ) : object | array {
 
 		// $parameters = array_merge( $this->globalParameters(), $this->parameters, $parameters );
 
 		// dd( $parameters );
 
-		return $parameters;
+		return $parameters ?? $this->defaultParameters;
 	}
 
 	/** Get the path to a template file, or a template string.
