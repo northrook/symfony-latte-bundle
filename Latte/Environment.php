@@ -127,7 +127,7 @@ class Environment
 
 		$this->stopwatch?->start('engine', 'latte' );
 
-		$this->latte = new $engine( ... $args ) ?? new Latte\Engine();
+		$this->latte = new ( $engine ?? Latte\Engine::class )( ...$args );
 
 		$this->addExtension( $this->coreExtension ?? new CoreExtension() );
 

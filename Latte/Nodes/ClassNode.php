@@ -22,13 +22,14 @@ use Latte\Compiler\Tag;
 final class ClassNode extends StatementNode {
     public ArrayNode $args;
 
-    public static function create( Tag $tag ): ClassNode {
+	/**
+	 * @throws CompileException
+	 */
+	public static function create( Tag $tag ): ClassNode {
 
         if ( $tag->htmlElement->getAttribute( 'n:class' ) ) {
             throw new CompileException( 'It is not possible to combine id with n:class, or class.', $tag->position );
         }
-
-	     dump( $tag );
 
         $node       = new ClassNode;
         $node->args = $tag->parser->parseArguments();

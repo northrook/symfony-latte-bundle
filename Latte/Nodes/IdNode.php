@@ -32,7 +32,6 @@ final class IdNode extends StatementNode
 			throw new CompileException( 'It is not possible to combine id with n:id.', $tag->position );
 		}
 
-//		$tag->expectArguments();
 		$node = new IdNode();
 		$node->args = $tag->parser->parseArguments();
 
