@@ -52,7 +52,7 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->args( [
 		                  service( 'request_stack' ),
 		                  service( 'router' ),
-		                  service( 'security.csrf.token_generator' )->nullOnInvalid(),
+		                  service( 'security.csrf.token_storage' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 	                  ] )
 	          ->public()
