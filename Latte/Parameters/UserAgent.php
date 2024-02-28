@@ -67,9 +67,12 @@ final class UserAgent
 		};
 	}
 
+	#[Development( 'Timer::start(BrowserDetection)', untilVersion : '1.0.0' )]
 	public function __construct(
 		private readonly ?LoggerInterface $logger = null,
-	) {}
+	) {
+		Timer::start( 'BrowserDetection' );
+	}
 
 
 	private function getAll() : array {
@@ -145,15 +148,9 @@ final class UserAgent
 	)]
 	private function detect() : BrowserDetection {
 
-		if ( $this->browserDetection ) {
+		if ( isset( $this->browserDetection ) ) {
 			return $this->browserDetection;
 		}
-
-		Timer::start( 'BrowserDetection' );
-
-		$start = hrtime( true );
-		$timer = new stopwatch();
-		$timer->start( 'BrowserDetection' );
 
 		// Prefer using the class from Northrook\Support, as it caches the detection globally
 		if ( class_exists( \Northrook\Support\UserAgent::class ) ) {
@@ -166,21 +163,12 @@ final class UserAgent
 			$this->browserDetection = new BrowserDetection();
 		}
 
-		$timer->stop( 'BrowserDetection' );
-
-		$timer = $timer->getEvent( 'BrowserDetection' );
-
-		$time = ( hrtime( true ) - $start ) / 1_000_000;
-
-		$this?->logger->info( "The {service} service has been called and cached,", [
-			'service'   => 'BrowserDetection',
-			'class'     => $source,
-			'instance'  => $this,
-			'runtime'   => Timer::get( 'BrowserDetection' ) . 'ms',
-			//			'duration' => ltrim( number_format( $time, 3 ), '0' ) . 'ms',
-			//			'memory'   => $timer->getMemory(),
-			'stopwatch' => $timer,
-			'detected'  => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+		$this?->logger->info( "The {service} service has been called and cached.", [
+			'service'  => 'BrowserDetection',
+			'class'    => $source,
+			'instance' => $this,
+			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'runtime'  => Timer::get( 'BrowserDetection' ) . 'ms',
 		] );
 
 
