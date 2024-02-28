@@ -2,6 +2,7 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
+use Northrook\Support\Attribute\Development;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
@@ -132,7 +133,7 @@ class  GlobalParameters
 
 	protected function getUserAgent() : UserAgent {
 		return ( isset( $this->userAgentCache ) ) ? $this->userAgentCache
-			: $this->userAgentCache = new UserAgent();
+			: $this->userAgentCache = new UserAgent( $this->logger );
 	}
 
 

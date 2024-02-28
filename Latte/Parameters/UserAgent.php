@@ -136,7 +136,10 @@ final class UserAgent
 	 *
 	 * @return BrowserDetection
 	 */
-	#[Development] // TODO Remove the logger->debug call after 1.0
+	#[Development(
+		note         : "Remove the logger->debug",
+		untilVersion : "1.0.0"
+	)]
 	private function detect() : BrowserDetection {
 		$this->browserDetection ??= new BrowserDetection();
 
@@ -146,7 +149,6 @@ final class UserAgent
 			'package'  => 'foroco/php-browser-detection ^2.7',
 			'method'   => __METHOD__,
 			'instance' => $this,
-			'getEnv'   => getenv(),
 		] );
 
 		return $this->browserDetection;
