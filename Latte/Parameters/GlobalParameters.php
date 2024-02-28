@@ -1,8 +1,14 @@
-<?php /** @noinspection PhpUndefinedClassInspection */
+<?php
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpUndefinedNamespaceInspection
+ * @noinspection PhpUndefinedClassInspection
+ */
+
+declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use Northrook\Support\Attribute\Development;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
@@ -48,9 +54,10 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  *  */
 class  GlobalParameters
 {
-	private Request   $requestCache;
-	private Env       $envCache;
-	private UserAgent $userAgentCache;
+	private Request         $requestCache;
+	private Env             $envCache;
+	private UserAgent       $userAgentCache;
+	private readonly string $languageCache;
 
 	public function __get( string $name ) {
 		$name = "get" . ucfirst( $name );
@@ -75,16 +82,16 @@ class  GlobalParameters
 	/**
 	 * @return TokenInterface|null
 	 */
-	private function getToken() : ?TokenInterface {
+	protected function getToken() : ?TokenInterface {
 
-//		if (!isset($this->tokenStorage)) {
-		$this?->logger->warning( "The {service} was requested on {route}, but was not available.", [
-			'service'       => 'tokenStorage',
-			'route'         => $this->getRequest()->getPathInfo(),
-			'requestMethod' => $this->getRequest()->getMethod(),
-			'method'        => __METHOD__,
-		] );
-//		}
+		if ( !$this->tokenStorage ) {
+			$this?->logger->warning( "The {service} was requested on {route}, but was not available.", [
+				'service'       => 'tokenStorage',
+				'route'         => $this->getRequest()->getPathInfo(),
+				'requestMethod' => $this->getRequest()->getMethod(),
+				'method'        => __METHOD__,
+			] );
+		}
 
 		return $this->tokenStorage->getToken();
 	}
@@ -96,14 +103,14 @@ class  GlobalParameters
 	 */
 	protected function getUser() : ?UserInterface {
 
-//		if ( !isset( $this->tokenStorage ) ) {
-		$this?->logger->warning( "The {service} was requested on {route}, but was not available.", [
-			'service'       => 'tokenStorage',
-			'route'         => $this->getRequest()->getPathInfo(),
-			'requestMethod' => $this->getRequest()->getMethod(),
-			'method'        => __METHOD__,
-		] );
-//		}
+		if ( !$this->tokenStorage ) {
+			$this?->logger->warning( "The {service} was requested on {route}, but was not available.", [
+				'service'       => 'tokenStorage',
+				'route'         => $this->getRequest()->getPathInfo(),
+				'requestMethod' => $this->getRequest()->getMethod(),
+				'method'        => __METHOD__,
+			] );
+		}
 
 		return $this->tokenStorage->getToken()?->getUser();
 	}
@@ -151,22 +158,31 @@ class  GlobalParameters
 	}
 
 
-//	protected function getDebug() : bool {
-//		return $this->debug;
-//	}
-
-	// TODO: Get language from user if logged in, else from settings, else 'en-GB'
-	protected function getLanguage( ?string $fallback = 'en-GB' ) : string {
-		return $fallback;
+	public function language( ?string $fallback = null ) : string {
+		return $this?->localeSwitcher->getLocale() ?? $fallback;
 	}
 
+	protected function getLanguage() : string {
+		return $this->getLocale();
+	}
 
-	protected function getLocale() : string {
-		if ( !isset( $this->localeSwitcher ) ) {
-			throw new RuntimeException( 'The "app.locale" variable is not available.' );
+	protected function getLocale( ?string $fallback = null ) : string {
+
+		$fallback ??= 'en';
+
+		if ( !$this->localeSwitcher ) {
+			$this?->logger->warning( "The {service} was requested on {route}, but was not available.", [
+				'service'  => 'localeSwitcher',
+				'fallback' => $fallback,
+				'method'   => __METHOD__,
+			] );
 		}
 
-		return $this->localeSwitcher->getLocale();
+		if ( isset( $this->languageCache ) ) {
+			return $this->languageCache;
+		}
+
+		return $this->languageCache = $this?->localeSwitcher->getLocale() ?? $fallback;
 	}
 
 	protected function getEnabledLocales() : array {
@@ -212,7 +228,7 @@ class  GlobalParameters
 		return $result;
 	}
 
-	public function getRoute() : ?string {
+	protected function getRoute() : ?string {
 		return $this->getRequest()->attributes->get( '_route' );
 	}
 
@@ -259,6 +275,7 @@ class  GlobalParameters
 		try {
 			return $this->urlGenerator->generate(
 				name          : $route,
+				parameters    : $parameters,
 				referenceType : $absoluteUrl
 					                ? UrlGeneratorInterface::ABSOLUTE_URL
 					                : UrlGeneratorInterface::ABSOLUTE_PATH,

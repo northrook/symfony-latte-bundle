@@ -6,7 +6,6 @@ use Latte;
 use Latte\CompileException;
 use LogicException;
 use Northrook\Support\Attribute\EntryPoint;
-use Northrook\Support\File;
 use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
 

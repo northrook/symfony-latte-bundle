@@ -7,7 +7,6 @@ use foroco\BrowserDetection;
 use Northrook\Support\Attribute\Development;
 use Northrook\Support\Timer;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /** Return Type for {@see GlobalParameters::getUserAgent()}
@@ -18,9 +17,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * @property bool $isWindows
  * @property bool $isDesktop
  * @property bool $isMobile
- * @property ?string $os
- * @property ?string $osTitle
- * @property ?string $browser
+ * @property string $os
+ * @property string $osTitle
+ * @property string $browser
  *
  * @version 1.0 ✅
  * @author Martin Nielsen <mn@northrook.com>
@@ -157,17 +156,20 @@ final class UserAgent
 			$source = \Northrook\Support\UserAgent::class;
 			$this->browserDetection = \Northrook\Support\UserAgent::detect();
 		}
+
 		// Otherwise, use foroco\php-browser-detection directly
 		else {
 			$source = UserAgent::class;
 			$this->browserDetection = new BrowserDetection();
 		}
 
+		$all = $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] );
+
 		$this?->logger->info( "The {service} service has been called and cached.", [
 			'service'  => 'BrowserDetection',
 			'class'    => $source,
 			'instance' => $this,
-			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'detected' => $all,
 			'runtime'  => Timer::get( 'BrowserDetection' ) . 'ms',
 		] );
 
