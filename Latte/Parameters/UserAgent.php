@@ -6,6 +6,7 @@ namespace Northrook\Symfony\Latte\Parameters;
 use foroco\BrowserDetection;
 use Northrook\Support\Attribute\Development;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /** Return Type for {@see GlobalParameters::getUserAgent()}
@@ -143,6 +144,10 @@ final class UserAgent
 	)]
 	private function detect() : BrowserDetection {
 
+		$timer = new stopwatch();
+
+		$timer->start( 'BrowserDetection' );
+
 		// Prefer using the class from Northrook\Support, as it caches the detection globally
 		if ( class_exists( \Northrook\Support\UserAgent::class ) ) {
 			$source = \Northrook\Support\UserAgent::class;
@@ -154,12 +159,16 @@ final class UserAgent
 			$this->browserDetection ??= new BrowserDetection();
 		}
 
+		$timer->stop( 'BrowserDetection' );
+
 		$this?->logger->info( "The {service} service has been called and cached,", [
-			'service'  => 'BrowserDetection',
-			'class'    => $source,
-			'instance' => $this,
-			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'service'   => 'BrowserDetection',
+			'class'     => $source,
+			'instance'  => $this,
+			'stopwatch' => $timer,
+			'detected'  => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
 		] );
+
 
 		return $this->browserDetection;
 	}
