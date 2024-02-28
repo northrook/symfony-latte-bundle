@@ -148,7 +148,7 @@ final class UserAgent
 			'service'  => 'BrowserDetection',
 			'class'    => BrowserDetection::class,
 			'instance' => $this,
-			'all'      => $this->getAll(),
+			'all'      => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
 		] );
 
 		return $this->browserDetection;
