@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
  * @property bool $isMobile
  * @property ?string $os
  * @property ?string $osTitle
- * @property string $browser
+ * @property ?string $browser
  *
  * @version 1.0 ✅
  * @author Martin Nielsen <mn@northrook.com>
@@ -40,11 +40,12 @@ final class UserAgent
 	public function __get( string $name ) {
 
 		if ( false === class_exists( BrowserDetection::class ) ) {
-			$this?->logger->warning( "The {service} service was requested, but not available.", [
-				'service' => 'BrowserDetection',
-				'class'   => BrowserDetection::class,
-				'package' => 'foroco/php-browser-detection ^2.7',
-				'method'  => __METHOD__,
+			$this?->logger->critical( "The {service} service was requested, but not available.", [
+				'service'   => 'BrowserDetection',
+				'class'     => BrowserDetection::class,
+				'package'   => 'foroco/php-browser-detection ^2.7',
+				'method'    => __METHOD__,
+				'backtrace' => debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS ),
 			] );
 
 			return false;
@@ -79,13 +80,13 @@ final class UserAgent
 		)[ 'device_type' ] ?? 'unknown';
 	}
 
-	private function getOs() : string {
-		return $this->detectOS()[ 'os_family' ] ?? 'unknown';
+	private function getOs() : ?string {
+		return $this->detectOS()[ 'os_family' ] ?? null;
 	}
 
 
-	private function getOsTitle() : string {
-		return $this->detectOS()[ 'os_title' ] ?? 'unknown';
+	private function getOsTitle() : ?string {
+		return $this->detectOS()[ 'os_title' ] ?? null;
 	}
 
 	/**
@@ -102,8 +103,8 @@ final class UserAgent
 		return $this->detectOS()[ $family ] ?? false;
 	}
 
-	private function browserName() : string {
-		return $this->detectBrowser()[ 'browser_name' ] ?? 'unknown';
+	private function browserName() : ?string {
+		return $this->detectBrowser()[ 'browser_name' ] ?? null;
 	}
 
 	private function detectBrowser() : array {
@@ -143,12 +144,11 @@ final class UserAgent
 	private function detect() : BrowserDetection {
 		$this->browserDetection ??= new BrowserDetection();
 
-		$this?->logger->debug( "The {service} service has been called and cached,", [
+		$this?->logger->info( "The {service} service has been called and cached,", [
 			'service'  => 'BrowserDetection',
 			'class'    => BrowserDetection::class,
-			'package'  => 'foroco/php-browser-detection ^2.7',
-			'method'   => __METHOD__,
 			'instance' => $this,
+			'all'      => $this->getAll(),
 		] );
 
 		return $this->browserDetection;
