@@ -1,8 +1,7 @@
-<?php
+<?php /** @noinspection PhpUndefinedClassInspection */
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use Northrook\Support\UserAgent;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,7 +30,6 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  *
  * @version 1.0 ✅
  *
- *
  * @property Env $env
  * @property UserAgent $userAgent
  * @property bool $debug
@@ -47,11 +45,11 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  * @property ?UserInterface $user
  * @property ?SessionInterface $session
  *  */
-class GlobalParameters
+class  GlobalParameters
 {
-	private Request $requestCache;
-	private Env $envCache;
-//	private UserAgent $userAgentCache;
+	private Request   $requestCache;
+	private Env       $envCache;
+	private UserAgent $userAgentCache;
 
 	public function __get( string $name ) {
 		$name = "get" . ucfirst( $name );
@@ -63,13 +61,13 @@ class GlobalParameters
 	}
 
 	public function __construct(
-		public readonly string         $environment,
-		public readonly bool           $debug,
-		private RequestStack           $requestStack,
-		private UrlGeneratorInterface  $urlGenerator,
-		private ?TokenStorageInterface $tokenStorage = null,
-		private ?LocaleSwitcher        $localeSwitcher = null,
-		private ?LoggerInterface       $logger = null,
+		public readonly string                  $environment,
+		public readonly bool                    $debug,
+		private readonly RequestStack           $requestStack,
+		private readonly UrlGeneratorInterface  $urlGenerator,
+		private readonly ?TokenStorageInterface $tokenStorage = null,
+		private readonly ?LocaleSwitcher        $localeSwitcher = null,
+		private readonly ?LoggerInterface       $logger = null,
 	) {}
 
 
@@ -132,16 +130,15 @@ class GlobalParameters
 		return $request->hasSession() ? $request->getSession() : null;
 	}
 
-	protected function getUserAgent() : ?UserAgent {
-		if ( class_exists( 'UserAgent' ) ) {
-			return new UserAgent;
-		}
-		return null;
+	protected function getUserAgent() : UserAgent {
+		return ( isset( $this->userAgentCache ) ) ? $this->userAgentCache
+			: $this->userAgentCache = new UserAgent();
 	}
 
 
 	protected function getEnv() : Env {
-		return ( isset( $this->envCache ) ) ? $this->envCache
+		return ( isset( $this->envCache ) )
+			? $this->envCache
 			: $this->envCache = new Env(
 				$this->debug,
 				(bool) $this->getUser(),
