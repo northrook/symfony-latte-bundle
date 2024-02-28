@@ -5,6 +5,7 @@ namespace Northrook\Symfony\Latte\Parameters;
 
 use foroco\BrowserDetection;
 use Northrook\Support\Attribute\Development;
+use Northrook\Support\Timer;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
@@ -148,6 +149,8 @@ final class UserAgent
 			return $this->browserDetection;
 		}
 
+		Timer::start( 'BrowserDetection' );
+
 		$start = hrtime( true );
 		$timer = new stopwatch();
 		$timer->start( 'BrowserDetection' );
@@ -167,15 +170,17 @@ final class UserAgent
 
 		$timer = $timer->getEvent( 'BrowserDetection' );
 
-		$time = (hrtime( true ) - $start) / 1_000_000;
+		$time = ( hrtime( true ) - $start ) / 1_000_000;
 
 		$this?->logger->info( "The {service} service has been called and cached,", [
-			'service'  => 'BrowserDetection',
-			'class'    => $source,
-			'instance' => $this,
-			'duration' => ltrim( number_format( $time, 3 ), '0' ) . 'ms',
-			'memory'   => $timer->getMemory(),
-			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'service'   => 'BrowserDetection',
+			'class'     => $source,
+			'instance'  => $this,
+			'runtime'   => Timer::get( 'BrowserDetection' ) . 'ms',
+			//			'duration' => ltrim( number_format( $time, 3 ), '0' ) . 'ms',
+			//			'memory'   => $timer->getMemory(),
+			'stopwatch' => $timer,
+			'detected'  => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
 		] );
 
 
