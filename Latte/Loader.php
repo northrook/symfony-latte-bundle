@@ -133,8 +133,10 @@ class Loader implements Latte\Loader
 				$tags[] = $extension;
 			}
 
-			else if ( !is_array( $extension ) ) {
-				continue;
+			else {
+				if ( !is_array( $extension ) ) {
+					continue;
+				}
 			}
 
 			foreach ( $extension as $tag => $parser ) {
@@ -154,10 +156,11 @@ class Loader implements Latte\Loader
 
 					// TODO: Improve auto-null to allow for filters (check from $ to pipe)
 					if ( str_contains( $value, '$' ) ) {
-						if (!str_contains( $value, '??' )){
+						if ( !str_contains( $value, '??' ) ) {
 							$value .= '??false';
 						}
-					} else {
+					}
+					else {
 						$value = "'$value'";
 					}
 
@@ -200,7 +203,7 @@ class Loader implements Latte\Loader
 		}
 		else {
 
-			$file = Str::filepath( $name, $this->baseDir);
+			$file = Str::filepath( $name, $this->baseDir );
 
 			if ( $this->baseDir && !str_starts_with( $this->normalizePath( $file ), $this->baseDir ) ) {
 				throw new Latte\RuntimeException(
@@ -241,10 +244,12 @@ class Loader implements Latte\Loader
 	 * @return bool
 	 */
 	public function isExpired( string $file, int $time ) : bool {
+
 		if ( $this->isStringLoader ) {
 			return false;
 		}
-		$mtime = @filemtime( $this->baseDir . $file ); // @ - stat may fail
+
+		$mtime = @filemtime( Str::filepath( $file, $this->baseDir ) ); // @ - stat may fail
 
 		return !$mtime || $mtime > $time;
 	}
