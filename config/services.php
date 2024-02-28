@@ -49,6 +49,8 @@ return static function ( ContainerConfigurator $container ) : void {
 	$container->services()
 	          ->set( 'core.latte.global_parameters', GlobalParameters::class )
 	          ->args( [
+		                  param( 'kernel.environment' ),               // Environment<string>
+		                  param( 'kernel.debug' ),                     // Debug<bool>
 		                  service( 'request_stack' ),               // RequestStack
 		                  service( 'router' ),                      // UrlGeneratorInterface
 		                  service( 'security.token_storage' )       // TokenStorageInterface
@@ -57,8 +59,6 @@ return static function ( ContainerConfigurator $container ) : void {
 		                  ->nullOnInvalid(),
 		                  service( 'logger' )                       // LoggerInterface
 		                  ->nullOnInvalid(),
-		                  param( 'kernel.environment' ),               // Environment<string>
-		                  param( 'kernel.debug' ),                     // Debug<bool>
 	                  ] )
 	          ->public()
 	          ->alias( GlobalParameters::class, 'core.latte.global_parameters' )

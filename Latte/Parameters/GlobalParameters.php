@@ -60,13 +60,13 @@ class GlobalParameters
 	}
 
 	public function __construct(
+		private readonly string        $environment,
+		private readonly bool          $debug,
 		private RequestStack           $requestStack,
 		private UrlGeneratorInterface  $urlGenerator,
 		private ?TokenStorageInterface $tokenStorage = null,
 		private ?LocaleSwitcher        $localeSwitcher = null,
 		private ?LoggerInterface       $logger = null,
-		private readonly string        $environment = 'dev',
-		private readonly bool          $debug = false,
 	) {}
 
 
