@@ -2,9 +2,8 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use Northrook\Support\Arr;
+use Northrook\Support\UserAgent;
 use Psr\Log\LoggerInterface;
-use Northrook\Symfony\Core\Services\EnvironmentService;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -32,7 +31,9 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  *
  * @version 1.0 ✅
  *
- * @property object $env = ['environment' => 'dev']
+ *
+ * @property Env $env
+ * @property UserAgent $userAgent
  * @property bool $debug
  * @property string $locale
  * @property array $enabledLocales
@@ -49,6 +50,8 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 class GlobalParameters
 {
 	private Request $requestCache;
+	private Env $envCache;
+//	private UserAgent $userAgentCache;
 
 	public function __get( string $name ) {
 		$name = "get" . ucfirst( $name );
@@ -129,15 +132,24 @@ class GlobalParameters
 		return $request->hasSession() ? $request->getSession() : null;
 	}
 
+	protected function getUserAgent() : ?UserAgent {
+		if ( class_exists( 'UserAgent' ) ) {
+			return new UserAgent;
+		}
+		return null;
+	}
 
-	protected function getEnv() : object {
-		return (object) [
-			'debug'      => $this->debug,
-			'authorized' => (bool) $this->getUser(),
-			'production' => $this->environment === 'prod',
-			'staging'    => $this->environment === 'staging',
-			'dev'        => $this->environment === 'dev',
-		];
+
+	protected function getEnv() : Env {
+		return ( isset( $this->envCache ) ) ? $this->envCache
+			: $this->envCache = new Env(
+				$this->debug,
+				(bool) $this->getUser(),
+				$this->environment === 'prod',
+				$this->environment === 'staging',
+				$this->environment === 'dev',
+			);
+
 	}
 
 
