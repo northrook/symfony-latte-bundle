@@ -161,12 +161,15 @@ final class UserAgent
 
 		$timer->stop( 'BrowserDetection' );
 
+		$timer = $timer->getEvent( 'BrowserDetection' );
+
 		$this?->logger->info( "The {service} service has been called and cached,", [
-			'service'   => 'BrowserDetection',
-			'class'     => $source,
-			'instance'  => $this,
-			'stopwatch' => $timer,
-			'detected'  => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'service'  => 'BrowserDetection',
+			'class'    => $source,
+			'instance' => $this,
+			'duration'     => $timer->getDuration(),
+			'memory'   => $timer->getMemory(),
+			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
 		] );
 
 
