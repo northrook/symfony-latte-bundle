@@ -65,8 +65,8 @@ class GlobalParameters
 		private ?TokenStorageInterface $tokenStorage = null,
 		private ?LocaleSwitcher        $localeSwitcher = null,
 		private ?LoggerInterface       $logger = null,
-		private readonly string        $environment,
-		private readonly bool          $debug,
+		private readonly string        $environment = 'dev',
+		private readonly bool          $debug = false,
 	) {}
 
 
