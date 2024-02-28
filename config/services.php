@@ -8,11 +8,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
-use Northrook\Symfony\Latte\Template;
 
 return static function ( ContainerConfigurator $container ) : void {
 
-	$fromRoot = function( string $set = '' ) : string {
+	$fromRoot = function ( string $set = '' ) : string {
 		return '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
 				str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
 			) . DIRECTORY_SEPARATOR;
@@ -28,7 +27,7 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->args( [
 		                  param( 'dir.templates' ),
 		                  param( 'dir.cache.latte' ),
-						  service( 'core.latte.extension' )->nullOnInvalid(),
+		                  service( 'core.latte.extension' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
 		                  service( 'core.latte.global_parameters' )->nullOnInvalid(),
@@ -50,10 +49,16 @@ return static function ( ContainerConfigurator $container ) : void {
 	$container->services()
 	          ->set( 'core.latte.global_parameters', GlobalParameters::class )
 	          ->args( [
-		                  service( 'request_stack' ),
-		                  service( 'router' ),
-		                  service( 'security.token_storage' )->nullOnInvalid(),
-		                  service( 'logger' )->nullOnInvalid(),
+		                  service( 'request_stack' ),               // RequestStack
+		                  service( 'router' ),                      // UrlGeneratorInterface
+		                  service( 'security.token_storage' )       // TokenStorageInterface
+		                  ->nullOnInvalid(),
+		                  service( 'translation.locale_switcher' )  // LocaleSwitcher
+		                  ->nullOnInvalid(),
+		                  service( 'logger' )                       // LoggerInterface
+		                  ->nullOnInvalid(),
+		                  param( 'kernel.environment' ),               // Environment<string>
+		                  param( 'kernel.debug' ),                     // Debug<bool>
 	                  ] )
 	          ->public()
 	          ->alias( GlobalParameters::class, 'core.latte.global_parameters' )
