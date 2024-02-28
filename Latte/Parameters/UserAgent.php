@@ -142,13 +142,23 @@ final class UserAgent
 		untilVersion : "1.0.0"
 	)]
 	private function detect() : BrowserDetection {
-		$this->browserDetection ??= new BrowserDetection();
+
+		// Prefer using the class from Northrook\Support, as it caches the detection globally
+		if ( class_exists( \Northrook\Support\UserAgent::class ) ) {
+			$source = \Northrook\Support\UserAgent::class;
+			$this->browserDetection ??= \Northrook\Support\UserAgent::detect();
+		}
+		// Otherwise, use foroco\php-browser-detection directly
+		else {
+			$source = UserAgent::class;
+			$this->browserDetection ??= new BrowserDetection();
+		}
 
 		$this?->logger->info( "The {service} service has been called and cached,", [
 			'service'  => 'BrowserDetection',
-			'class'    => BrowserDetection::class,
+			'class'    => $source,
 			'instance' => $this,
-			'all'      => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
+			'detected' => $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] ),
 		] );
 
 		return $this->browserDetection;
