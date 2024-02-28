@@ -32,7 +32,7 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  *
  * @version 1.0 ✅
  *
- * @property object $env // Potential
+ * @property object $env = ['environment' => 'dev']
  * @property bool $debug
  * @property string $locale
  * @property array $enabledLocales
@@ -60,8 +60,8 @@ class GlobalParameters
 	}
 
 	public function __construct(
-		private readonly string        $environment,
-		private readonly bool          $debug,
+		public readonly string         $environment,
+		public readonly bool           $debug,
 		private RequestStack           $requestStack,
 		private UrlGeneratorInterface  $urlGenerator,
 		private ?TokenStorageInterface $tokenStorage = null,
@@ -132,19 +132,18 @@ class GlobalParameters
 
 	protected function getEnv() : object {
 		return (object) [
-			'is'   => fn ( string $name ) : mixed => match ( $name ) {
-				'debug'   => $this->debug,
-				'authorized' => (bool) $this->getUser(),
-				'locale'  => $this->localeSwitcher->getLocale(),
-				'default' => $this->environment,
-			},
-			'type' => $this->environment,
+			'debug'      => $this->debug,
+			'authorized' => (bool) $this->getUser(),
+			'production' => $this->environment === 'prod',
+			'staging'    => $this->environment === 'staging',
+			'dev'        => $this->environment === 'dev',
 		];
 	}
 
-	protected function getDebug() : bool {
-		return $this->debug;
-	}
+
+//	protected function getDebug() : bool {
+//		return $this->debug;
+//	}
 
 	// TODO: Get language from user if logged in, else from settings, else 'en-GB'
 	protected function getLanguage( ?string $fallback = 'en-GB' ) : string {
