@@ -18,15 +18,15 @@ return static function ( ContainerConfigurator $container ) : void {
 	};
 
 	$container->parameters()
-	          ->set( 'dir.templates', $fromRoot( "/templates" ) )
-	          ->set( 'dir.cache.latte', $fromRoot( "/var/cache/latte" ) )
+	          ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
+	          ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
 	;
 
 	$container->services()
 	          ->set( 'core.latte', Environment::class )
 	          ->args( [
-		                  param( 'dir.templates' ),
-		                  param( 'dir.cache.latte' ),
+		                  param( 'dir.latte.templates' ),
+		                  param( 'dir.latte.cache' ),
 		                  service( 'core.latte.extension' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
@@ -63,13 +63,4 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->public()
 	          ->alias( GlobalParameters::class, 'core.latte.global_parameters' )
 	;
-
-//	$container->services()
-//	          ->set( 'core.latte.template', Template::class )
-//	          ->args( [
-//		                  service( 'core.latte.global_parameters' ),
-//	                  ] )
-//	          ->public()
-//	          ->alias( Template::class, 'core.latte.template' )
-//	;
 };
