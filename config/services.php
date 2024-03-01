@@ -2,6 +2,9 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+//use Northrook\Symfony\Latte\Services\EnvironmentService;
+
+
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
@@ -9,10 +12,9 @@ use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 return static function ( ContainerConfigurator $container ) : void {
 
 	$fromRoot = function ( string $set = '' ) : string {
-		$root = '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
+		return '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
 				str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
 			) . DIRECTORY_SEPARATOR;
-		return strtoupper( $root );
 	};
 
 	$container->parameters()
