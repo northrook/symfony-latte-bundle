@@ -11,7 +11,7 @@ use Latte;
 use Latte\Engine;
 use Latte\Extension;
 use Northrook\Support\Attribute\EntryPoint;
-use Northrook\Support\File;
+//use Northrook\Support\File;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;

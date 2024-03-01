@@ -4,7 +4,6 @@ namespace Northrook\Symfony\Latte;
 
 use Latte;
 use Latte\Runtime\Template;
-use Northrook\Support\Debug;
 use Northrook\Symfony\Latte\Nodes\ClassNode;
 use Northrook\Symfony\Latte\Nodes\IdNode;
 use Psr\Log\LoggerInterface;
@@ -49,12 +48,10 @@ final class CoreExtension extends Latte\Extension
 
 	public function getFunctions() : array {
 		return [
-			'path'        => [ $this, 'resolvePathFromRoute' ],
+			'path'         => [ $this, 'resolvePathFromRoute' ],
 			'encoded_href' => static function ( $string ) {
 				echo CoreExtension::encodeHref( $string );
 			},
-			'debug'        => [ Debug::class, 'log' ],
-			'dump_logs'    => [ Debug::class, 'dumpLogs' ],
 			'print_debug'  => static function ( ...$args ) {
 				echo '<pre>';
 				foreach ( $args as $arg ) {
@@ -104,7 +101,7 @@ final class CoreExtension extends Latte\Extension
 				message : "Unable to resolve route {name}",
 				context : [
 					          'name'      => $route,
-							  'template'  => $this->template,
+					          'template'  => $this->template,
 					          'exception' => $e,
 				          ],
 			);

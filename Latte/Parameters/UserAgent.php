@@ -4,8 +4,6 @@ namespace Northrook\Symfony\Latte\Parameters;
 
 
 use foroco\BrowserDetection;
-use Northrook\Support\Attribute\Development;
-use Northrook\Support\Timer;
 use Psr\Log\LoggerInterface;
 
 
@@ -66,22 +64,18 @@ final class UserAgent
 		};
 	}
 
-	#[Development( 'Timer::start(BrowserDetection)', untilVersion : '1.0.0' )]
 	public function __construct(
 		private readonly ?LoggerInterface $logger = null,
-	) {
-		Timer::start( 'BrowserDetection' );
-	}
-
+	) {}
 
 	private function getAll() : array {
 		return $this->getAllCache ??= $this->detect()->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] );
 	}
 
-	private function deviceType() : string {
+	private function deviceType() : ?string {
 		return $this->deviceTypeCache ??= $this->detect()->getDevice(
 			$_SERVER[ 'HTTP_USER_AGENT' ],
-		)[ 'device_type' ] ?? 'unknown';
+		)[ 'device_type' ] ?? null;
 	}
 
 	private function getOs() : ?string {
@@ -141,10 +135,6 @@ final class UserAgent
 	 *
 	 * @return BrowserDetection
 	 */
-	#[Development(
-		note         : "Remove the logger->debug",
-		untilVersion : "1.0.0"
-	)]
 	private function detect() : BrowserDetection {
 
 		if ( isset( $this->browserDetection ) ) {
@@ -153,27 +143,12 @@ final class UserAgent
 
 		// Prefer using the class from Northrook\Support, as it caches the detection globally
 		if ( class_exists( \Northrook\Support\UserAgent::class ) ) {
-			$source = \Northrook\Support\UserAgent::class;
-			$this->browserDetection = \Northrook\Support\UserAgent::detect();
+			return $this->browserDetection = \Northrook\Support\UserAgent::detect();
 		}
 
 		// Otherwise, use foroco\php-browser-detection directly
 		else {
-			$source = UserAgent::class;
-			$this->browserDetection = new BrowserDetection();
+			return $this->browserDetection = new BrowserDetection();
 		}
-
-		$all = $this->browserDetection->getAll( $_SERVER[ 'HTTP_USER_AGENT' ] );
-
-		$this?->logger->info( "The {service} service has been called and cached.", [
-			'service'  => 'BrowserDetection',
-			'class'    => $source,
-			'instance' => $this,
-			'detected' => $all,
-			'runtime'  => Timer::get( 'BrowserDetection' ) . 'ms',
-		] );
-
-
-		return $this->browserDetection;
 	}
 }

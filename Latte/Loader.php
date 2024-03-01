@@ -2,6 +2,7 @@
 
 namespace Northrook\Symfony\Latte;
 
+use File;
 use Latte;
 use Latte\CompileException;
 use LogicException;
@@ -204,7 +205,7 @@ class Loader implements Latte\Loader
 
 			$file = Str::filepath( $name, $this->baseDir );
 
-			if ( $this->baseDir && !str_starts_with( $this->normalizePath( $file ), $this->baseDir ) ) {
+			if ( $this->baseDir && !str_starts_with( File::normalizePath( $file ), $this->baseDir ) ) {
 				throw new Latte\RuntimeException(
 					"Template '$file' is not within the allowed path '$this->baseDir'."
 				);
@@ -272,7 +273,7 @@ class Loader implements Latte\Loader
 		}
 
 		if ( $this->baseDir || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
-			$name = $this->normalizePath( $referringName . '/../' . $name );
+			$name = File::normalizePath( $referringName . '/../' . $name );
 		}
 
 		return $name;
@@ -298,34 +299,4 @@ class Loader implements Latte\Loader
 
 	}
 
-	/** File Loader Only
-	 *
-	 * @param  string  $string
-	 * @return string
-	 */
-	private function normalizePath( string $string ) : string {
-
-		$path = [];
-		$string = strtr( $string, '\\', '/' );
-
-		if ( str_contains( $string, '/' ) === false ) {
-			return $string;
-		}
-
-		foreach ( explode( '/', $string ) as $part ) {
-			if ( $part === '..' && $path && end( $path ) !== '..' ) {
-				array_pop( $path );
-			}
-			else {
-				if ( $part !== '.' ) {
-					$path[] = $part;
-				}
-			}
-		}
-
-		return implode(
-			separator : DIRECTORY_SEPARATOR,
-			array     : $path,
-		);
-	}
 }

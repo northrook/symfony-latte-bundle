@@ -5,9 +5,7 @@ namespace Northrook\Symfony\Latte;
 use Northrook\Support\Attribute\EntryPoint;
 use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpKernel\Log\Logger;
 use Symfony\Component\Stopwatch\Stopwatch;
-use function print_r;
 
 abstract class Preprocessor
 {
