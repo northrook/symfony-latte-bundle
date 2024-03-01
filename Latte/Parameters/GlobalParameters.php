@@ -157,9 +157,8 @@ class  GlobalParameters
 
 	}
 
-
 	public function language( ?string $fallback = null ) : string {
-		return $this?->localeSwitcher->getLocale() ?? $fallback;
+		return $this->getLocale( $fallback );
 	}
 
 	protected function getLanguage() : string {
@@ -182,7 +181,7 @@ class  GlobalParameters
 			return $this->languageCache;
 		}
 
-		return $this->languageCache = $this?->localeSwitcher->getLocale() ?? $fallback;
+		return $this->languageCache = $this->localeSwitcher?->getLocale() ?? $fallback;
 	}
 
 	protected function getEnabledLocales() : array {

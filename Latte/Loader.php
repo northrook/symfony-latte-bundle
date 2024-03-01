@@ -26,18 +26,21 @@ class Loader implements Latte\Loader
 		'%%ARROW%%' => '->',
 	];
 
-	private bool $isStringLoader = false;
+	public readonly string $baseDir;
+	private bool           $isStringLoader = false;
 
 
 	public function __construct(
 		// The base directory for templates, root/templates by default.
-		public readonly ?string           $baseDir,
+		string                            $baseDir,
 		// Key-value array of name and template markup.
 		public readonly ?array            $templates = null,
 		private readonly array            $extensions = [],
 		private readonly array            $compilers = [],
 		private readonly ?LoggerInterface $logger = null,
-	) {}
+	) {
+		$this->baseDir = Str::normalizePath( $baseDir );
+	}
 
 	/**
 	 * * TODO: [mid] Improve the regex pattern for matching {$variable_Names->values}
