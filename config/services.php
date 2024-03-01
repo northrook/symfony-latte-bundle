@@ -12,7 +12,7 @@ return static function ( ContainerConfigurator $container ) : void {
 		$root = '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
 				str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
 			) . DIRECTORY_SEPARATOR;
-		return strtolower( $root );
+		return strtoupper( $root );
 	};
 
 	$container->parameters()

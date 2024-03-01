@@ -28,19 +28,16 @@ class Loader implements Latte\Loader
 
 	private bool $isStringLoader = false;
 
-	private ?LoggerInterface $logger = null;
 
 	public function __construct(
 		// The base directory for templates, root/templates by default.
-		public readonly ?string $baseDir,
+		public readonly ?string           $baseDir,
 		// Key-value array of name and template markup.
-		public readonly ?array  $templates = null,
-		private readonly array  $extensions = [],
-		private readonly array  $compilers = [],
-		?LoggerInterface        $logger = null,
-	) {
-		$this->logger = $logger;
-	}
+		public readonly ?array            $templates = null,
+		private readonly array            $extensions = [],
+		private readonly array            $compilers = [],
+		private readonly ?LoggerInterface $logger = null,
+	) {}
 
 	/**
 	 * * TODO: [mid] Improve the regex pattern for matching {$variable_Names->values}
