@@ -200,7 +200,7 @@ class Loader implements Latte\Loader
 
 			$file = Str::filepath( $name, $this->baseDir );
 
-			if ( $this->baseDir && !str_starts_with( File::normalizePath( $file ), $this->baseDir ) ) {
+			if ( $this->baseDir && !str_starts_with( Str::normalizePath( $file ), $this->baseDir ) ) {
 				throw new Latte\RuntimeException(
 					"Template '$file' is not within the allowed path '$this->baseDir'."
 				);
