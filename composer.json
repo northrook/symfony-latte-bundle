@@ -5,7 +5,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Northrook\\Symfony\\Latte\\": "Latte/"
+      "Northrook\\Symfony\\Latte\\": "src/"
     }
   },
   "authors": [
