@@ -31,13 +31,13 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->args( [
 		                  param( 'dir.latte.templates' ),
 		                  param( 'dir.latte.cache' ),
-		                  service( 'core.latte.extension' )->nullOnInvalid(),
+		                  service( 'latte.core.extension' )->nullOnInvalid(),
 		                  service( 'logger' )->nullOnInvalid(),
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
-		                  service( 'core.latte.global_parameters' )->nullOnInvalid(),
+		                  service( 'latte.core.global_parameters' )->nullOnInvalid(),
 	                  ] )
-//	          ->public()
-              ->alias( Environment::class, 'latte.environment' )
+	          ->public()
+	          ->alias( Environment::class, 'latte.environment' )
 		//
 		// 🧩️ - Latte Extension
 		      ->set( 'latte.core.extension', CoreExtension::class )
