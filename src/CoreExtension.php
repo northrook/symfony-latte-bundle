@@ -5,7 +5,6 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\Runtime\Template;
 use Northrook\Symfony\Latte\Nodes\ClassNode;
-use Northrook\Symfony\Latte\Nodes\ComponentNode;
 use Northrook\Symfony\Latte\Nodes\IdNode;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

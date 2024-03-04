@@ -39,7 +39,7 @@ return static function ( ContainerConfigurator $container ) : void {
 //	          ->public()
               ->alias( Environment::class, 'latte.environment' )
 		//
-		// 🍩️️ - Latte Extension
+		// 🧩️ - Latte Extension
 		      ->set( 'latte.core.extension', CoreExtension::class )
 	          ->args( [
 		                  service( 'router' ),
@@ -48,7 +48,7 @@ return static function ( ContainerConfigurator $container ) : void {
 	          ->public()
 	          ->alias( CoreExtension::class, 'core.latte.extension' )
 		//
-		// ️🧩♦️- Global Parameters
+		// ️📦️ - Global Parameters
 		      ->set( 'latte.core.parameters', CoreParameters::class )
 	          ->args( [
 		                  param( 'kernel.environment' ),               // Environment<string>
