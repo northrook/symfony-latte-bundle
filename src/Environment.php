@@ -10,9 +10,9 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\Engine;
 use Latte\Extension;
-use Northrook\Support\Attribute\EntryPoint;
+use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Support\File;
-use Northrook\Symfony\Latte\Parameters\GlobalParameters;
+use Northrook\Symfony\Latte\Parameters\CoreParameters;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -21,15 +21,15 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * * AbstractCoreController
  *
  */
-#[EntryPoint] // Called by the AbstractCoreController
+#[EntryPoint( 'config/service.php', 'northrook/symfony-core-bundle AbstractCoreController' )]
 class Environment
 {
 
 	private ?Latte\Engine $latte      = null;
 	private array         $parameters = [];
 
-	private static GlobalParameters $globalParameter;
-	private static array            $templates = [];
+	private static CoreParameters $globalParameter;
+	private static array          $templates = [];
 
 	/** @var Extension[] */
 	private array $extensions = [];
@@ -39,12 +39,12 @@ class Environment
 
 
 	public function __construct(
-		public string                      $templateDirectory,
-		public string                      $cacheDirectory,
-		protected ?CoreExtension           $coreExtension = null,
-		protected ?LoggerInterface         $logger = null,
-		protected ?Stopwatch               $stopwatch = null,
-		private readonly ?GlobalParameters $globalParameters = null,
+		public string                    $templateDirectory,
+		public string                    $cacheDirectory,
+		protected ?CoreExtension         $coreExtension = null,
+		protected ?LoggerInterface       $logger = null,
+		protected ?Stopwatch             $stopwatch = null,
+		private readonly ?CoreParameters $globalParameters = null,
 	) {}
 
 
@@ -77,7 +77,7 @@ class Environment
 		}
 	}
 
-	public static function getGlobalParameter() : GlobalParameters {
+	public static function getGlobalParameter() : CoreParameters {
 		return self::$globalParameter;
 	}
 
@@ -92,14 +92,14 @@ class Environment
 		return $parameters;
 	}
 
-	public function setGlobalParameter( GlobalParameters $globalParameter, string $name = 'get' ) : self {
+	public function setGlobalParameter( CoreParameters $globalParameter, string $name = 'get' ) : self {
 
 		$this->parameters[ $name ] = $globalParameter;
 
 		return $this;
 	}
 
-	public function addPrecompiler( Preprocessor ...$preprocessor ) : self {
+	public function addPreprocessor( Preprocessor ...$preprocessor ) : self {
 
 		$this->preprocessors = array_merge( $this->preprocessors, $preprocessor );
 
@@ -199,7 +199,7 @@ class Environment
 		$global = false;
 
 		foreach ( $parameters as $key => $value ) {
-			if ( $value instanceof GlobalParameters ) {
+			if ( $value instanceof CoreParameters ) {
 				$global = $key;
 				break;
 			}

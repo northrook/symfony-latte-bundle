@@ -40,7 +40,7 @@ final class CoreExtension extends Latte\Extension
 		return [
 			'n:id'    => [ IdNode::class, 'create' ],
 			'n:class' => [ ClassNode::class, 'create' ],
-			'n:component' => [ ComponentNode::class, 'create' ],
+//			'n:component' => [ ComponentNode::class, 'create' ],
 			//			'n:href'  => [ HrefNode::class, 'create' ], // TODO: Implement
 			//			'asset'   => [$this->asset, 'asset'], // TODO: Should be part of n:href? Can we autocomplete assets (images)?
 			//			'n:src'   => [$this->asset, 'asset'], // TODO: Can we make this autocomplete, and in <img only?

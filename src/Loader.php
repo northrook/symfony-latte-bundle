@@ -5,8 +5,10 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\CompileException;
 use LogicException;
-use Northrook\Support\Attribute\EntryPoint;
+use Northrook\Logger\Timer;
+use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Support\Str;
+use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Psr\Log\LoggerInterface;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
@@ -36,7 +38,7 @@ class Loader implements Latte\Loader
 		// Key-value array of name and template markup.
 		public readonly ?array            $templates = null,
 		private readonly array            $extensions = [],
-		private readonly array            $compilers = [],
+		private readonly array            $preprocessors = [],
 		private readonly ?LoggerInterface $logger = null,
 	) {
 		$this->baseDir = Str::normalizePath( $baseDir );
@@ -73,29 +75,50 @@ class Loader implements Latte\Loader
 		$content = $this->latteTags( $content );
 		$content = $this::prepare( $content );
 
-		foreach ( $this->compilers as $compiler ) {
+		foreach ( $this->preprocessors as $compiler ) {
 
-			if ( class_exists( $compiler ) ) {
-				$step = new $compiler( $content );
-				if ( method_exists( $step, '__toString' ) ) {
-					$content = (string) $step;
-				}
-				else {
-					throw new Latte\CompileException(
-						"Class $compiler\n must implement __toString()"
-					);
-				}
+			if ( !$compiler instanceof PreprocessorInterface ) {
+				throw new Latte\CompileException(
+					"Class $compiler\n must implement __toString()"
+				);
 			}
-			else {
-				if ( is_callable( $compiler ) ) {
-					$content = (string) $compiler( $content );
-				}
-				else {
-					throw new Latte\CompileException(
-						"Compiler $compiler\n is not a class or callable"
-					);
-				}
+
+			Timer::start( 'preprocessor' );
+
+			$compiler->load( $content );
+
+			$content = $compiler->getContent();
+
+			$time = Timer::get( 'preprocessor' );
+
+			if ( $time > 0 ) {
+				$this->logger?->info( "Preprocessor {preprocessor} took {time} seconds.", [
+					'preprocessor' => get_class( $compiler ),
+					'time'         => "{$time}ms",
+				] );
 			}
+
+//			if ( class_exists( $compiler ) ) {
+//				$step = new $compiler( $content );
+//				if ( method_exists( $step, '__toString' ) ) {
+//					$content = (string) $step;
+//				}
+//				else {
+//					throw new Latte\CompileException(
+//						"Class $compiler\n must implement __toString()"
+//					);
+//				}
+//			}
+//			else {
+//				if ( is_callable( $compiler ) ) {
+//					$content = (string) $compiler( $content );
+//				}
+//				else {
+//					throw new Latte\CompileException(
+//						"Compiler $compiler\n is not a class or callable"
+//					);
+//				}
+//			}
 		}
 
 

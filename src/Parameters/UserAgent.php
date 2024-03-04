@@ -7,7 +7,7 @@ use foroco\BrowserDetection;
 use Psr\Log\LoggerInterface;
 
 
-/** Return Type for {@see GlobalParameters::getUserAgent()}
+/** Return Type for {@see CoreParameters::getUserAgent()}
  *
  * @property bool $isAndroid
  * @property bool $isApple

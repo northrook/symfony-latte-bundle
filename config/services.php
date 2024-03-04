@@ -7,7 +7,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
-use Northrook\Symfony\Latte\Parameters\GlobalParameters;
+use Northrook\Symfony\Latte\Parameters\CoreParameters;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -17,13 +17,17 @@ return static function ( ContainerConfigurator $container ) : void {
 			) . DIRECTORY_SEPARATOR;
 	};
 
+	// Parameters
 	$container->parameters()
 	          ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
 	          ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
 	;
 
+	// Services
 	$container->services()
-	          ->set( 'core.latte', Environment::class )
+		//
+		// ☕ - Latte Environment
+		      ->set( 'latte.environment', Environment::class )
 	          ->args( [
 		                  param( 'dir.latte.templates' ),
 		                  param( 'dir.latte.cache' ),
@@ -32,22 +36,20 @@ return static function ( ContainerConfigurator $container ) : void {
 		                  service( 'debug.stopwatch' )->nullOnInvalid(),
 		                  service( 'core.latte.global_parameters' )->nullOnInvalid(),
 	                  ] )
-	          ->public()
-	          ->alias( Environment::class, 'core.latte' )
-	;
-
-	$container->services()
-	          ->set( 'core.latte.extension', CoreExtension::class )
+//	          ->public()
+              ->alias( Environment::class, 'latte.environment' )
+		//
+		// 🍩️️ - Latte Extension
+		      ->set( 'latte.core.extension', CoreExtension::class )
 	          ->args( [
 		                  service( 'router' ),
 		                  service( 'logger' )->nullOnInvalid(),
 	                  ] )
 	          ->public()
 	          ->alias( CoreExtension::class, 'core.latte.extension' )
-	;
-
-	$container->services()
-	          ->set( 'core.latte.global_parameters', GlobalParameters::class )
+		//
+		// ️🧩♦️- Global Parameters
+		      ->set( 'latte.core.parameters', CoreParameters::class )
 	          ->args( [
 		                  param( 'kernel.environment' ),               // Environment<string>
 		                  param( 'kernel.debug' ),                     // Debug<bool>
@@ -60,7 +62,8 @@ return static function ( ContainerConfigurator $container ) : void {
 		                  service( 'logger' )                       // LoggerInterface
 		                  ->nullOnInvalid(),
 	                  ] )
+	          ->autowire()
 	          ->public()
-	          ->alias( GlobalParameters::class, 'core.latte.global_parameters' )
+	          ->alias( CoreParameters::class, 'latte.core.parameters' )
 	;
 };

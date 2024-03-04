@@ -52,7 +52,7 @@ use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
  * @property ?UserInterface $user
  * @property ?SessionInterface $session
  *  */
-class  GlobalParameters
+class  CoreParameters
 {
 	private Request         $requestCache;
 	private Env             $envCache;

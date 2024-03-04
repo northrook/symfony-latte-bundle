@@ -2,10 +2,10 @@
 
 namespace Northrook\Symfony\Latte;
 
-use Northrook\Symfony\Latte\Parameters\GlobalParameters;
+use Northrook\Symfony\Latte\Parameters\CoreParameters;
 
 abstract class AbstractTemplate
 {
-	public GlobalParameters $get;
+	public CoreParameters $get;
 
 }

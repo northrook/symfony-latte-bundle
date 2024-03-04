@@ -2,12 +2,13 @@
 
 namespace Northrook\Symfony\Latte;
 
-use Northrook\Support\Attribute\EntryPoint;
+use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Support\Str;
+use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-abstract class Preprocessor
+abstract class Preprocessor implements PreprocessorInterface
 {
 
 	protected string $content;
@@ -19,12 +20,15 @@ abstract class Preprocessor
 
 	#[EntryPoint]
 	final public function __construct(
-		string $content,
 		protected ?LoggerInterface $logger = null,
-		protected ?Stopwatch $stopwatch = null
+		protected ?Stopwatch       $stopwatch = null,
 	) {}
 
 	abstract public function construct() : void;
+
+	final public function load( string $content ) : void {
+		$this->content = $content;
+	}
 
 	final public function getContent() : string {
 		$this->prepareContent();
@@ -34,7 +38,7 @@ abstract class Preprocessor
 	}
 
 
-	final protected function updateContent( string $match, string $update ): void {
+	final protected function updateContent( string $match, string $update ) : void {
 		$this->content = str_ireplace( $match, $update, $this->content );
 	}
 
@@ -44,10 +48,10 @@ abstract class Preprocessor
 		// Remove Latte comments
 		// TODO: Remove all comments?
 		$this->content = preg_replace(
-			       '/{\*.*?\*}/ms',
-			       '',
-			       $this->content,
-			count: $count
+			        '/{\*.*?\*}/ms',
+			        '',
+			        $this->content,
+			count : $count,
 		);
 
 		$this->logger->info( 'Removed {count} Latte comments', [ 'count' => $count ] );
@@ -56,12 +60,12 @@ abstract class Preprocessor
 		$this->content = preg_replace_callback(
 			'/{(.*?)}/ms',
 			function ( array $m ) {
-				$var = trim( $m[1] );
-				if ( ! str_contains( $var, '$' ) || Str::startsWith( $var, ['layout', 'block', 'var'] ) ) {
+				$var = trim( $m[ 1 ] );
+				if ( !str_contains( $var, '$' ) || Str::startsWith( $var, [ 'layout', 'block', 'var' ] ) ) {
 					return '{' . $var . '}';
 				}
 
-				if ( ! str_contains( $var, '??' ) ) {
+				if ( !str_contains( $var, '??' ) ) {
 					$test = $var;
 //					print_r($test);
 					$var = '{' . $var .= '??false}';
@@ -76,9 +80,8 @@ abstract class Preprocessor
 
 				return $var;
 			},
-			$this->content
+			$this->content,
 		);
-
 
 
 		if ( $this->minify === false && $this->preserveExcessWhitespaces === false ) {

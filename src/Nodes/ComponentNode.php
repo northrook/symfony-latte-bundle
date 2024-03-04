@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Nodes;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte\CompileException;
 use Latte\Compiler\Nodes\AreaNode;
 use Latte\Compiler\Nodes\AuxiliaryNode;
@@ -22,12 +23,13 @@ use Latte\Compiler\TemplateParser;
 /**
  * n:component
  */
+#[Deprecated]
 class ComponentNode extends StatementNode
 {
-	public AreaNode $content;
-	public int $id;
+	public AreaNode    $content;
+	public int         $id;
 	public ElementNode $htmlElement;
-	public ?AreaNode $else = null;
+	public ?AreaNode   $else = null;
 
 
 	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
