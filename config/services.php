@@ -46,7 +46,7 @@ return static function ( ContainerConfigurator $container ) : void {
 		                  service( 'logger' )->nullOnInvalid(),
 	                  ] )
 	          ->public()
-	          ->alias( CoreExtension::class, 'core.latte.extension' )
+	          ->alias( CoreExtension::class, 'latte.core.extension' )
 		//
 		// ️📦️ - Global Parameters
 		      ->set( 'latte.core.parameters', CoreParameters::class )
