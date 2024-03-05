@@ -3,7 +3,6 @@
 namespace Northrook\Symfony\Latte;
 
 use Latte;
-use Latte\CompileException;
 use LogicException;
 use Northrook\Logger\Timer;
 use Northrook\Support\Attributes\EntryPoint;
@@ -31,6 +30,9 @@ class Loader implements Latte\Loader
 	public readonly string $baseDir;
 	private bool           $isStringLoader = false;
 
+	/** @var PreprocessorInterface[] */
+	private readonly array $preprocessors;
+
 
 	public function __construct(
 		// The base directory for templates, root/templates by default.
@@ -38,10 +40,11 @@ class Loader implements Latte\Loader
 		// Key-value array of name and template markup.
 		public readonly ?array            $templates = null,
 		private readonly array            $extensions = [],
-		private readonly array            $preprocessors = [],
+		array                             $preprocessors = [],
 		private readonly ?LoggerInterface $logger = null,
 	) {
 		$this->baseDir = Str::normalizePath( $baseDir );
+		$this->preprocessors = $preprocessors;
 	}
 
 	/**
@@ -53,22 +56,21 @@ class Loader implements Latte\Loader
 	 */
 	public static function prepare( string $content ) : string {
 
-		$content = preg_replace_callback(
-			"/\\\$[a-zA-Z?>._':$\s\-]*/ms",
+		return preg_replace_callback(
+			"/\\\$[a-zA-Z?>._':$\s\-]*/m",
 			function ( array $m ) {
 				return str_replace( '->', '%%ARROW%%', $m[ 0 ] );
 			},
 			$content,
 		);
-
-		return $content;
 	}
 
 	/**
 	 * * Prepare and compile the template.
 	 * * The content is passed through each precompiler.
 	 *
-	 * @throws CompileException
+	 * @param  string  $content
+	 * @return string
 	 */
 	private function compile( string $content ) : string {
 
@@ -78,9 +80,11 @@ class Loader implements Latte\Loader
 		foreach ( $this->preprocessors as $compiler ) {
 
 			if ( !$compiler instanceof PreprocessorInterface ) {
-				throw new Latte\CompileException(
-					"Class $compiler\n must implement __toString()"
+				$this->logger?->emergency(
+					"Preprocessor {preprocessor} must implement PreprocessorInterface.",
+					[ 'preprocessor' => get_class( $compiler ) ],
 				);
+				continue;
 			}
 
 			Timer::start( 'preprocessor' );
@@ -91,45 +95,29 @@ class Loader implements Latte\Loader
 
 			$time = Timer::get( 'preprocessor' );
 
-			if ( $time > 0 ) {
-				$this->logger?->info( "Preprocessor {preprocessor} took {time} seconds.", [
-					'preprocessor' => get_class( $compiler ),
-					'time'         => "{$time}ms",
-				] );
-			}
+			$slow = match ( true ) {
+				$time >= 55 => 'error',
+				$time >= 35 => 'warning',
+				$time >= 25 => 'notice',
+				default     => false,
+			};
 
-//			if ( class_exists( $compiler ) ) {
-//				$step = new $compiler( $content );
-//				if ( method_exists( $step, '__toString' ) ) {
-//					$content = (string) $step;
-//				}
-//				else {
-//					throw new Latte\CompileException(
-//						"Class $compiler\n must implement __toString()"
-//					);
-//				}
-//			}
-//			else {
-//				if ( is_callable( $compiler ) ) {
-//					$content = (string) $compiler( $content );
-//				}
-//				else {
-//					throw new Latte\CompileException(
-//						"Compiler $compiler\n is not a class or callable"
-//					);
-//				}
-//			}
+			if ( $slow ) {
+				$this->logger?->log(
+					$slow,
+					"Preprocessor {preprocessor} took {time} seconds.", [
+						'preprocessor' => get_class( $compiler ),
+						'time'         => "{$time}ms",
+					],
+				);
+			}
 		}
 
-
-		$content = str_ireplace(
+		return str_ireplace(
 			array_keys( self::NORMALIZE_VARIABLES ),
 			array_values( self::NORMALIZE_VARIABLES ),
 			$content,
 		);
-
-		// dd( $content );
-		return $content;
 	}
 
 
@@ -261,17 +249,17 @@ class Loader implements Latte\Loader
 	 *
 	 * * Expired templates will be regenerated on demand.
 	 *
-	 * @param  string  $file
+	 * @param  string  $name
 	 * @param  int  $time
 	 * @return bool
 	 */
-	public function isExpired( string $file, int $time ) : bool {
+	public function isExpired( string $name, int $time ) : bool {
 
 		if ( $this->isStringLoader ) {
 			return false;
 		}
 
-		$mtime = @filemtime( Str::filepath( $file, $this->baseDir ) ); // @ - stat may fail
+		$mtime = @filemtime( Str::filepath( $name, $this->baseDir ) ); // @ - stat may fail
 
 		return !$mtime || $mtime > $time;
 	}

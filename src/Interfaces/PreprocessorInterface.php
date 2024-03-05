@@ -1,4 +1,4 @@
-<?php
+<?php declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Interfaces;
 
@@ -6,6 +6,14 @@ use Latte;
 
 /**
  * Latte Preprocessor Interface.
+ *
+ * * Parsed by the {@see Latte\Loader} when generating cache files.
+ *
+ * @version 1.0 ✅
+ * @author Martin Nielsen <mn@northrook.com>
+ *
+ * @link https://github.com/northrook Documentation
+ * @todo Update URL to documentation
  */
 interface PreprocessorInterface
 {

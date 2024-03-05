@@ -1,11 +1,4 @@
-<?php
-
-/**
- * This file is part of the Latte (https://latte.nette.org)
- * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
- */
-
-declare ( strict_types = 1 );
+<?php declare ( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Nodes;
 
@@ -15,9 +8,20 @@ use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\StatementNode;
 use Latte\Compiler\PrintContext;
 use Latte\Compiler\Tag;
+use Latte\Compiler;
 
 /**
- * n:id="..."
+ * Parsing `n:id` attributes for the {@see  Compiler\TemplateParser}
+ *
+ * @copyright David Grudl
+ * @see https://davidgrudl.com  David Grudl
+ * @see https://latte.nette.org Latte Templating Engine
+ *
+ * @version 1.0 ✅
+ * @author Martin Nielsen <mn@northrook.com>
+ *
+ * @link https://github.com/northrook Documentation
+ * @todo Update URL to documentation
  */
 final class IdNode extends StatementNode
 {

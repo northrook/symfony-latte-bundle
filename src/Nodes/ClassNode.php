@@ -1,11 +1,4 @@
-<?php
-
-/**
- * This file is part of the Latte (https://latte.nette.org)
- * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
- */
-
-declare ( strict_types = 1 );
+<?php declare ( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Nodes;
 
@@ -15,38 +8,49 @@ use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\StatementNode;
 use Latte\Compiler\PrintContext;
 use Latte\Compiler\Tag;
+use Latte\Compiler;
 
 /**
- * class="..."
+ * Parsing `n:class` attributes for the {@see  Compiler\TemplateParser}
+ *
+ * @copyright David Grudl
+ * @see https://davidgrudl.com  David Grudl
+ * @see https://latte.nette.org Latte Templating Engine
+ *
+ * @version 1.0 ✅
+ * @author Martin Nielsen <mn@northrook.com>
+ *
+ * @link https://github.com/northrook Documentation
+ * @todo Update URL to documentation
  */
-final class ClassNode extends StatementNode {
-    public ArrayNode $args;
+final class ClassNode extends StatementNode
+{
+	public ArrayNode $args;
 
 	/**
 	 * @throws CompileException
 	 */
-	public static function create( Tag $tag ): ClassNode {
+	public static function create( Tag $tag ) : ClassNode {
 
-        if ( $tag->htmlElement->getAttribute( 'n:class' ) ) {
-            throw new CompileException( 'It is not possible to combine id with n:class, or class.', $tag->position );
-        }
+		if ( $tag->htmlElement->getAttribute( 'n:class' ) ) {
+			throw new CompileException( 'It is not possible to combine id with n:class, or class.', $tag->position );
+		}
 
-        $node       = new ClassNode;
-        $node->args = $tag->parser->parseArguments();
+		$node = new ClassNode();
+		$node->args = $tag->parser->parseArguments();
 
-        return $node;
-    }
+		return $node;
+	}
 
-    public function print( PrintContext $context ): string {
-        return $context->format(
-            'echo ($ʟ_tmp = array_filter(%node)) ? \' class="\' . Northrook\Support\HTML\Element::classes(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
-            $this->args,
-            $this->position,
-        );
-    }
+	public function print( PrintContext $context ) : string {
+		return $context->format(
+			'echo ($ʟ_tmp = array_filter(%node)) ? \' class="\' . Northrook\Support\HTML\Element::classes(implode(" ", array_unique($ʟ_tmp))) . \'"\' : "" %line;',
+			$this->args,
+			$this->position,
+		);
+	}
 
-    public function &getIterator(): Generator
-    {
-        yield $this->args;
-    }
+	public function &getIterator() : Generator {
+		yield $this->args;
+	}
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte;
 
@@ -8,6 +8,13 @@ use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+/**
+ * @version 1.0 ☑️
+ * @author Martin Nielsen <mn@northrook.com>
+ *
+ * @link https://github.com/northrook Documentation
+ * @todo Update URL to documentation
+ */
 abstract class Preprocessor implements PreprocessorInterface
 {
 
@@ -71,7 +78,6 @@ abstract class Preprocessor implements PreprocessorInterface
 					return $var;
 				}
 
-				// dump( $m,$var );
 				$var = '{' . $var . '}';
 
 
