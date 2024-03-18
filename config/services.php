@@ -35,7 +35,6 @@ return static function ( ContainerConfigurator $container ) : void {
                       service( 'latte.core.parameters' )->nullOnInvalid(),
                   ],
               )
-              ->public()
               ->alias( LatteEnvironment::class, 'latte.environment' )
         //
         // 🧩️ - Latte Extension
