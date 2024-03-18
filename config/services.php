@@ -2,9 +2,6 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-//use Northrook\Symfony\Latte\Services\EnvironmentService;
-
-
 use Northrook\Symfony\Latte\LatteBundleExtension;
 use Northrook\Symfony\Latte\LatteEnvironment;
 use Northrook\Symfony\Latte\Parameters\CoreParameters;
