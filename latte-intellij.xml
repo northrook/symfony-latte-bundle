@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE latte PUBLIC "-//LATTE//Latte plugin XML V0.0.1//EN" ".idea/intellij-latte/xmlSources/Latte.dtd">
-<latte version="1" vendor="myVendor/myPackage">
-    <tags>
-        <tag name="id" type="ATTR_ONLY">
-            <arguments>
-                <argument name="id" types="VARIABLE,PHP_EXPRESSION,NONE" validType="string" required="true"/>
-            </arguments>
-        </tag>
-    </tags>
-    <functions>
-        <function name="route" returnType="string" arguments="(string $route)"
-                  description="Computes and return a Symfony Route"/>
-    </functions>
-    <filters>
-        <filter name="echo" description="Simply echo the provided string."/>
-    </filters>
-</latte>
+<project version="4">
+    <component name="LattePluginSettings">
+        <option name="variableSettings">
+            <list>
+                <LatteVariableSettings VarName="get" VarType="Northrook\Symfony\Latte\Parameters\GlobalParameters"/>
+                <LatteVariableSettings VarName="document"
+                                       VarType="Northrook\Symfony\Latte\Parameters\DocumentParameters"/>
+            </list>
+        </option>
+    </component>
+</project>

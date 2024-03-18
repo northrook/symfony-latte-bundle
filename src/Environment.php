@@ -15,6 +15,7 @@ use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
@@ -73,6 +74,14 @@ class Environment
         $this->stopwatch?->stop( 'engine' );
 
         return $render;
+    }
+
+    public function clearCache() : void {
+
+        $fs = new Filesystem();
+
+        $fs->remove( $this->cacheDirectory );
+
     }
 
     public static function addTemplate( array $array ) : void {
