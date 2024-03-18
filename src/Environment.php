@@ -10,8 +10,8 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\Engine;
 use Latte\Extension;
-use Northrook\Symfony\Latte\Parameters\CoreParameters;
 use Northrook\Symfony\Latte\Parameters\DocumentParameters;
+use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
@@ -21,7 +21,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * * AbstractCoreController
  *
  */
-class LatteEnvironment
+class Environment
 {
 
     private static array $templates = [];
@@ -39,13 +39,13 @@ class LatteEnvironment
 
 
     public function __construct(
-        public string                         $templateDirectory,
-        public string                         $cacheDirectory,
-        private readonly LatteBundleExtension $coreExtension,
-        private readonly CoreParameters       $globalParameters,
-        protected ?LoggerInterface            $logger = null,
-        protected ?Stopwatch                  $stopwatch = null,
-        private ?DocumentParameters           $documentParameters = null,
+        public string                     $templateDirectory,
+        public string                     $cacheDirectory,
+        private readonly CoreExtension    $coreExtension,
+        private readonly GlobalParameters $globalParameters,
+        protected ?LoggerInterface        $logger = null,
+        protected ?Stopwatch              $stopwatch = null,
+        private ?DocumentParameters       $documentParameters = null,
     ) {
         $this->options = new Options();
     }
@@ -119,7 +119,7 @@ class LatteEnvironment
      *
      * Actions:
      * * Start the Latte engine, stored in `$this->latte`
-     * * Adds the {@see LatteBundleExtension} to the `$this->extensions` array
+     * * Adds the {@see CoreExtension} to the `$this->extensions` array
      * * Adds all extensions from `$this->extensions`
      * * Sets the template directory to `$this->templateDirectory`
      * * Sets the cache directory to `$this->cacheDirectory`

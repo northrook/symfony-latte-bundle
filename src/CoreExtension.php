@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class LatteBundleExtension extends Latte\Extension
+final class CoreExtension extends Latte\Extension
 {
 
     private Template $template;
@@ -45,7 +45,7 @@ final class LatteBundleExtension extends Latte\Extension
         return [
             'path'         => [ $this, 'resolvePathFromRoute' ],
             'encoded_href' => static function ( $string ) {
-                echo LatteBundleExtension::encodeHref( $string );
+                echo CoreExtension::encodeHref( $string );
             },
             'print_debug'  => static function ( ...$args ) {
                 echo '<pre>';
@@ -73,7 +73,7 @@ final class LatteBundleExtension extends Latte\Extension
                 echo $string;
             },
             'encode' => static function ( $string ) {
-                echo LatteBundleExtension::encodeString( $string );
+                echo CoreExtension::encodeString( $string );
             },
         ];
     }
