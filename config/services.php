@@ -4,6 +4,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
+use Northrook\Symfony\Latte\Parameters\DocumentParameters;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 
 return static function ( ContainerConfigurator $container ) : void {
@@ -66,5 +67,20 @@ return static function ( ContainerConfigurator $container ) : void {
               ->autowire()
               ->public()
               ->alias( GlobalParameters::class, 'latte.parameters.global' )
+        //
+        //
+        // ☕ - Document Parameters
+              ->set( 'latte.parameters.document', DocumentParameters::class )
+//              ->args(
+//                  [
+//                      service( 'core.service.request' ),
+//                      service( 'core.service.content' ),
+//                      service( 'core.service.pathfinder' ),
+//                      service( 'logger' )->nullOnInvalid(),
+//                  ],
+//              )
+              ->autowire()
+              ->public()
+              ->alias( DocumentParameters::class, 'latte.parameters.document' )
     ;
 };
