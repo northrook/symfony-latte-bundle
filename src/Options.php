@@ -36,7 +36,7 @@ final class Options extends Properties
         }
 
         try {
-            $this->coreTemplateDirectory = new Path( $this->parameterBag->get( 'dir.core.latte.templates' ) );
+            $this->coreTemplateDirectory = new Path( $this->parameterBag->get( 'dir.latte.templates.core' ) );
         }
         catch ( ParameterNotFoundException $e ) {
             Log::Warning(

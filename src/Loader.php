@@ -6,7 +6,9 @@ use Latte;
 use LogicException;
 use Northrook\Logger\Timer;
 use Northrook\Support\Attributes\EntryPoint;
+use Northrook\Symfony\Core\File;
 use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
+use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
@@ -17,6 +19,7 @@ use Psr\Log\LoggerInterface;
  */
 class Loader implements Latte\Loader
 {
+    private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
 
     private const NORMALIZE_VARIABLES = [
         '{ $'       => '{$',
@@ -219,10 +222,25 @@ class Loader implements Latte\Loader
         }
         else {
 
-            $file = ( clone $this->options->templateDirectory )->add( $name );
+            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . $name );
 
-            if ( !$file->exists && $this->options->coreTemplateDirectory ) {
-                $file = ( clone $this->options->coreTemplateDirectory )->add( $name );
+            if ( !$file->exists ) {
+                foreach ( File::pathfinder()->getParameters() as $parameter => $path ) {
+                    if ( str_contains( Loader::TEMPLATE_DIR_PARAMETER, $parameter ) ) {
+                        dump( $parameter, $name );
+                        $file = File::path( $parameter . "$name" );
+
+                        if ( $file->exists ) {
+                            break;
+                        }
+                    }
+                }
+
+                $file = new Path(
+                    File::parameterDirname(
+                        '../../../symfony-core-bundle/templates/_document.latte',
+                    )
+                );
             }
 
 
