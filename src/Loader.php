@@ -6,7 +6,6 @@ use Latte;
 use LogicException;
 use Northrook\Logger\Timer;
 use Northrook\Support\Attributes\EntryPoint;
-use Northrook\Support\Str;
 use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Psr\Log\LoggerInterface;
 
@@ -222,7 +221,7 @@ class Loader implements Latte\Loader
 
             $file = ( clone $this->options->templateDirectory )->add( $name );
 
-            if ( !$file->exists ) {
+            if ( !$file->exists && $this->options->coreTemplateDirectory ) {
                 $file = ( clone $this->options->coreTemplateDirectory )->add( $name );
             }
 
@@ -262,7 +261,7 @@ class Loader implements Latte\Loader
             return false;
         }
 
-        $mtime = @filemtime( Str::filepath( $name, $this->baseDir ) ); // @ - stat may fail
+        $mtime = @filemtime( $this->options->templateDirectory->value . $name ); // @ - stat may fail
 
         return !$mtime || $mtime > $time;
     }
@@ -286,7 +285,7 @@ class Loader implements Latte\Loader
             return $name;
         }
 
-        if ( $this->baseDir || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
+        if ( $this->options->templateDirectory->value || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
             $name = $this->normalizePath( $referringName . '/../' . $name );
         }
 
@@ -313,7 +312,7 @@ class Loader implements Latte\Loader
         /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
         /// That way we can have a default template, like _document.latte
 
-        return $this->baseDir . strtr( $name, '/', DIRECTORY_SEPARATOR );
+        return $this->options->templateDirectory->value . $name;
 
     }
 

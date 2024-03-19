@@ -37,7 +37,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->set( 'latte.environment', Environment::class )
               ->args(
                   [
-                      service( 'parameter_bag' ),
+                      service( 'latte.options' ),
                       service( 'latte.core.extension' ),
                       service( 'latte.parameters.global' ),
                       service( 'logger' )->nullOnInvalid(),

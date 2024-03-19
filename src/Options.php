@@ -5,8 +5,8 @@ namespace Northrook\Symfony\Latte;
 use Northrook\Logger\Log;
 use Northrook\Types\Path;
 use Northrook\Types\Type\Properties;
+use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 final class Options extends Properties
 {
@@ -24,21 +24,21 @@ final class Options extends Properties
         try {
             $this->templateDirectory = new Path( $this->parameterBag->get( 'dir.latte.templates' ) );
         }
-        catch ( FileNotFoundException $e ) {
+        catch ( ParameterNotFoundException $e ) {
             trigger_error( "The `templateDirectory` is required. " . $e->getMessage() );
         }
 
         try {
             $this->cacheDirectory = new Path( $this->parameterBag->get( 'dir.latte.cache' ) );
         }
-        catch ( FileNotFoundException $e ) {
+        catch ( ParameterNotFoundException $e ) {
             trigger_error( "The `cacheDirectory` is required. " . $e->getMessage() );
         }
 
         try {
             $this->coreTemplateDirectory = new Path( $this->parameterBag->get( 'dir.core.latte.templates' ) );
         }
-        catch ( FileNotFoundException $e ) {
+        catch ( ParameterNotFoundException $e ) {
             Log::Warning(
                 "The {message} was not set. The current value is {value}.  Error: {message}",
                 [
