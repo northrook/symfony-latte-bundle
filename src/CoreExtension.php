@@ -14,7 +14,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class CoreExtension extends Latte\Extension
 {
-
     private Template $template;
 
     public function __construct(
@@ -35,8 +34,8 @@ final class CoreExtension extends Latte\Extension
             'n:id'    => [ IdNode::class, 'create' ],
             'n:class' => [ ClassNode::class, 'create' ],
             //			'n:href'  => [ HrefNode::class, 'create' ], // TODO: Implement
-            //			'asset'   => [$this->asset, 'asset'], // TODO: Should be part of n:href? Can we autocomplete assets (images)?
-            //			'n:src'   => [$this->asset, 'asset'], // TODO: Can we make this autocomplete, and in <img only?
+            //			'asset'   => [$this->asset, 'asset'],       // TODO: Should be part of n:href? Can we autocomplete assets (images)?
+            //			'n:src'   => [$this->asset, 'asset'],       // TODO: Can we make this autocomplete, and in <img only?
             //       If no image, provide optional default
         ];
     }

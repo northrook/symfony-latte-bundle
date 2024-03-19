@@ -2,14 +2,10 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-// TODO : Option to add parameters from Controller or via config
-// TODO : Asset Manager from Components Library
-
-/**
- * @property string $base
- */
-class DocumentParameters
+class Document
 {
+    public string $title = __METHOD__;
+    
     public function __get( string $name ) {
         $name = "get" . ucfirst( $name );
         if ( method_exists( $this, $name ) ) {

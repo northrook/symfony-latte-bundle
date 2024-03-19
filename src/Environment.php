@@ -10,10 +10,10 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\Engine;
 use Latte\Extension;
-use Northrook\Symfony\Latte\Parameters\DocumentParameters;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -26,7 +26,7 @@ class Environment
 {
 
     private static array $templates = [];
-
+    // private array         $templateDirectories = [];
     private ?Latte\Engine $latte      = null;
     private array         $parameters = [];
 
@@ -40,12 +40,12 @@ class Environment
     public Path $cacheDirectory;
 
     public function __construct(
-        public readonly Options           $options,
-        private readonly CoreExtension    $coreExtension,
-        private readonly GlobalParameters $globalParameters,
-        protected ?LoggerInterface        $logger = null,
-        protected ?Stopwatch              $stopwatch = null,
-        private ?DocumentParameters       $documentParameters = null,
+        private readonly ParameterBagInterface $parameterBag,
+        public readonly Options                $options,
+        private readonly CoreExtension         $coreExtension,
+        private readonly GlobalParameters      $globalParameters,
+        protected ?LoggerInterface             $logger = null,
+        protected ?Stopwatch                   $stopwatch = null,
     ) {
 //        $this->cacheDirectory = new Path( $this->parameterBag->get( 'dir.latte.cache' ) );
     }
@@ -99,10 +99,6 @@ class Environment
         }
 
         return $parameters;
-    }
-
-    public function setDocumentParameters( DocumentParameters $documentParameters ) : void {
-        $this->documentParameters = $documentParameters;
     }
 
     public function addPreprocessor( Preprocessor ...$preprocessor ) : self {
@@ -162,6 +158,7 @@ class Environment
         $this->latte->setTempDirectory( (string) $this->options->cacheDirectory )
                     ->setLoader(
                         new Loader(
+                            $this->parameterBag,
                             $this->options,
                             self::$templates,
                             $this->latte->getExtensions(),
@@ -196,28 +193,28 @@ class Environment
         }
 
         $this->parameters[ $this->options->globalVariable ] = $this->globalParameters;
-
-        if ( null === $parameters && $this->documentParameters ) {
-            $this->parameters[ $this->options->documentVariable ] = $this->documentParameters;
-
-            return $this->documentParameters;
-        }
-
-        if ( array_key_exists( $this->options->globalVariable, $parameters ) ) {
-            $this->logger->error(
-                'The {key} parameter is reserved and cannot be used as a template parameter. It has been {action}.',
-                [ 'key' => $this->options->globalVariable, 'action' => 'unset' ],
-            );
-            unset( $parameters[ $this->options->globalVariable ] );
-        }
-
-        if ( $this->documentParameters && array_key_exists( $this->options->documentVariable, $parameters ) ) {
-            $this->logger->error(
-                'The {key} parameter is reserved and cannot be used as a template parameter. It has been {action}.',
-                [ 'key' => $this->options->documentVariable, 'action' => 'unset' ],
-            );
-            unset( $parameters[ $this->options->documentVariable ] );
-        }
+        //
+        // if ( null === $parameters && $this->documentParameters ) {
+        //     $this->parameters[ $this->options->documentVariable ] = $this->documentParameters;
+        //
+        //     return $this->documentParameters;
+        // }
+        //
+        // if ( array_key_exists( $this->options->globalVariable, $parameters ) ) {
+        //     $this->logger->error(
+        //         'The {key} parameter is reserved and cannot be used as a template parameter. It has been {action}.',
+        //         [ 'key' => $this->options->globalVariable, 'action' => 'unset' ],
+        //     );
+        //     unset( $parameters[ $this->options->globalVariable ] );
+        // }
+        //
+        // if ( $this->documentParameters && array_key_exists( $this->options->documentVariable, $parameters ) ) {
+        //     $this->logger->error(
+        //         'The {key} parameter is reserved and cannot be used as a template parameter. It has been {action}.',
+        //         [ 'key' => $this->options->documentVariable, 'action' => 'unset' ],
+        //     );
+        //     unset( $parameters[ $this->options->documentVariable ] );
+        // }
 
         $parameters = array_merge( $this->parameters, (array) $parameters );
 
@@ -259,7 +256,7 @@ class Environment
 //        }
 //
 //        return $path->value;
-        
+
         return $load;
     }
 }

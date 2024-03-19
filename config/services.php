@@ -5,7 +5,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Options;
-use Northrook\Symfony\Latte\Parameters\DocumentParameters;
+use Northrook\Symfony\Latte\Parameters\Document;
 use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 
 return static function ( ContainerConfigurator $container ) : void {
@@ -37,6 +37,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->set( 'latte.environment', Environment::class )
               ->args(
                   [
+                      service( 'parameter_bag' ),
                       service( 'latte.options' ),
                       service( 'latte.core.extension' ),
                       service( 'latte.parameters.global' ),
@@ -62,6 +63,7 @@ return static function ( ContainerConfigurator $container ) : void {
                   [
                       param( 'kernel.environment' ),               // Environment<string>
                       param( 'kernel.debug' ),                     // Debug<bool>
+                      service( 'latte.parameters.document' ),               // RequestStack
                       service( 'request_stack' ),               // RequestStack
                       service( 'router' ),                      // UrlGeneratorInterface
                       service( 'security.token_storage' )       // TokenStorageInterface
@@ -78,7 +80,7 @@ return static function ( ContainerConfigurator $container ) : void {
         //
         //
         // ☕ - Document Parameters
-              ->set( 'latte.parameters.document', DocumentParameters::class )
+              ->set( 'latte.parameters.document', Document::class )
 //              ->args(
 //                  [
 //                      service( 'core.service.request' ),
@@ -89,6 +91,6 @@ return static function ( ContainerConfigurator $container ) : void {
 //              )
               ->autowire()
               ->public()
-              ->alias( DocumentParameters::class, 'latte.parameters.document' )
+              ->alias( Document::class, 'latte.parameters.document' )
     ;
 };

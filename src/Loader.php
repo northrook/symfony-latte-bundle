@@ -6,10 +6,10 @@ use Latte;
 use LogicException;
 use Northrook\Logger\Timer;
 use Northrook\Support\Attributes\EntryPoint;
-use Northrook\Symfony\Core\File;
 use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
  *
@@ -33,18 +33,20 @@ class Loader implements Latte\Loader
 
     /** @var PreprocessorInterface[] */
     private readonly array $preprocessors;
+    private array          $templateDirectories;
 
 
     public readonly string $baseDir;
 
 
     public function __construct(
-        private readonly Options          $options,
+        private readonly ParameterBagInterface $parameterBag,
+        private readonly Options               $options,
         // Key-value array of name and template markup.
-        public readonly ?array            $templates = null,
-        private readonly array            $extensions = [],
-        array                             $preprocessors = [],
-        private readonly ?LoggerInterface $logger = null,
+        public readonly ?array                 $templates = null,
+        private readonly array                 $extensions = [],
+        array                                  $preprocessors = [],
+        private readonly ?LoggerInterface      $logger = null,
     ) {
         $this->preprocessors = $preprocessors;
     }
@@ -189,6 +191,29 @@ class Loader implements Latte\Loader
         return $content;
     }
 
+    private function getTemplatePath( ?string $name = null ) : ?Path {
+
+        $directories = $this->getTemplateDirectories();
+
+        $path = ( $directories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
+
+        if ( $path && file_exists( $path ) ) {
+            return new Path( $path );
+        }
+        else {
+            foreach ( $directories as $parameter => $path ) {
+                if ( str_contains( $parameter, Loader::TEMPLATE_DIR_PARAMETER )
+                     && file_exists( $path . $name ) ) {
+                    return new Path( $path . $name );
+                }
+            }
+
+        }
+
+        return null;
+    }
+
+
     public function getContent( string $name ) : string {
 
         if ( $this->isStringLoader ) {
@@ -222,26 +247,29 @@ class Loader implements Latte\Loader
         }
         else {
 
-            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . "/$name" );
+//            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . "/$name" );
+//
+//            if ( !$file->exists ) {
+//                foreach ( File::pathfinder()->getParameters() as $parameter => $path ) {
+//                    if ( str_contains( Loader::TEMPLATE_DIR_PARAMETER, $parameter ) ) {
+//                        dump( $parameter, $name );
+//                        $file = File::path( $parameter . "/$name" );
+//
+//                        if ( $file->exists )  {
+//                            break;
+//                        }
+//                    }
+//                }
+//
+//                $file = new Path(
+//                    File::parameterDirname(
+//                        '../../../symfony-core-bundle/templates/_document.latte',
+//                    )
+//                );
+//            }
 
-            if ( !$file->exists ) {
-                foreach ( File::pathfinder()->getParameters() as $parameter => $path ) {
-                    if ( str_contains( Loader::TEMPLATE_DIR_PARAMETER, $parameter ) ) {
-                        dump( $parameter, $name );
-                        $file = File::path( $parameter . "/$name" );
 
-                        if ( $file->exists ) {
-                            break;
-                        }
-                    }
-                }
-
-                $file = new Path(
-                    File::parameterDirname(
-                        '../../../symfony-core-bundle/templates/_document.latte',
-                    )
-                );
-            }
+            $file = $this->getTemplatePath( $name );
 
 
             if ( !$file->exists ) {
@@ -263,6 +291,15 @@ class Loader implements Latte\Loader
 
         return $this->compile( $content );
     }
+
+    private function getTemplateDirectories() : array {
+        return $this->templateDirectories ??= array_filter(
+            array    : $this->parameterBag->all(),
+            callback : static fn ( $value, $key ) => is_string( $value ) && str_contains( $key, 'dir.latte' ),
+            mode     : ARRAY_FILTER_USE_BOTH,
+        );
+    }
+
 
     /** Checks whether template has expired.
      *
