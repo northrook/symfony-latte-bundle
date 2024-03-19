@@ -36,19 +36,18 @@ class Environment
     /** @var Preprocessor[] */
     private array $preprocessors = [];
 
-    public readonly Options $options;
 
+    public Path $cacheDirectory;
 
     public function __construct(
-        public string                     $templateDirectory,
-        public string                     $cacheDirectory,
+        public readonly Options           $options,
         private readonly CoreExtension    $coreExtension,
         private readonly GlobalParameters $globalParameters,
         protected ?LoggerInterface        $logger = null,
         protected ?Stopwatch              $stopwatch = null,
         private ?DocumentParameters       $documentParameters = null,
     ) {
-        $this->options = new Options();
+//        $this->cacheDirectory = new Path( $this->parameterBag->get( 'dir.latte.cache' ) );
     }
 
 
@@ -67,7 +66,8 @@ class Environment
         $this->latte ??= $this->startEngine();
 
         $render = $this->latte->renderToString(
-            $this->templateFilePath( $template ),
+            $template,
+//            $this->templateFilePath( $template ),
             $this->templateParameters( $parameters ),
         );
 
@@ -80,7 +80,7 @@ class Environment
 
         $fs = new Filesystem();
 
-        $fs->remove( $this->cacheDirectory );
+        $fs->remove( (string) $this->options->cacheDirectory );
 
     }
 
@@ -148,6 +148,7 @@ class Environment
             return $this->latte;
         }
 
+
         $this->stopwatch?->start( 'engine', 'latte' );
 
         $this->latte = new ( $engine ?? Latte\Engine::class )( ...$args );
@@ -158,10 +159,10 @@ class Environment
             $this->latte->addExtension( $extension );
         }
 
-        $this->latte->setTempDirectory( $this->cacheDirectory )
+        $this->latte->setTempDirectory( (string) $this->options->cacheDirectory )
                     ->setLoader(
                         new Loader(
-                            $this->templateDirectory,
+                            $this->options,
                             self::$templates,
                             $this->latte->getExtensions(),
                             $this->preprocessors,
@@ -229,32 +230,36 @@ class Environment
      *
      * @return string
      * @throws FileNotFoundException
+     *
+     * @deprecated
      */
     private function templateFilePath( string $load ) : string {
 
-        // Assume it's a template string, if it contains '{' and '}'.
-        if ( str_contains( $load, '{' ) && str_contains( $load, '}' ) ) {
-            return $load;
-        }
-
-        // Ensure a templates directory exists.
-        if ( !$this->templateDirectory ) {
-            throw new FileNotFoundException(
-                'No templates directory found.'
-            );
-        }
-
-        $path = new Path( $this->templateDirectory . $load );
-
-        // Ensure the template exists.
-        if ( !$path->isValid ) {
-            $available = glob( $this->templateDirectory . '*' );
-            $available = implode( ",\n", str_replace( $this->templateDirectory, '', $available ) );
-            throw new FileNotFoundException(
-                "Template not found: $load\nIn directory:\n$available"
-            );
-        }
-
-        return $path->value;
+//        // Assume it's a template string, if it contains '{' and '}'.
+//        if ( str_contains( $load, '{' ) && str_contains( $load, '}' ) ) {
+//            return $load;
+//        }
+//
+//        // Ensure a templates directory exists.
+//        if ( !$this->templateDirectory ) {
+//            throw new FileNotFoundException(
+//                'No templates directory found.'
+//            );
+//        }
+//
+//        $path = new Path( $this->templateDirectory . $load );
+//
+//        // Ensure the template exists.
+//        if ( !$path->isValid ) {
+//            $available = glob( $this->templateDirectory . '*' );
+//            $available = implode( ",\n", str_replace( $this->templateDirectory, '', $available ) );
+//            throw new FileNotFoundException(
+//                "Template not found: $load\nIn directory:\n$available"
+//            );
+//        }
+//
+//        return $path->value;
+        
+        return $load;
     }
 }
