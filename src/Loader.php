@@ -222,13 +222,13 @@ class Loader implements Latte\Loader
         }
         else {
 
-            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . $name );
+            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . "/$name" );
 
             if ( !$file->exists ) {
                 foreach ( File::pathfinder()->getParameters() as $parameter => $path ) {
                     if ( str_contains( Loader::TEMPLATE_DIR_PARAMETER, $parameter ) ) {
                         dump( $parameter, $name );
-                        $file = File::path( $parameter . "$name" );
+                        $file = File::path( $parameter . "/$name" );
 
                         if ( $file->exists ) {
                             break;
