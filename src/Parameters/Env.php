@@ -2,7 +2,7 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-/** Return Type for {@see GlobalParameters::getEnv()}
+/** Return Type for {@see Parameters::getEnv()}
  *
  * @version 1.0 ✅
  * @author  Martin Nielsen <mn@northrook.com>

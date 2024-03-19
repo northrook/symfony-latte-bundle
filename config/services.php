@@ -5,8 +5,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Options;
+use Northrook\Symfony\Latte\Parameters;
 use Northrook\Symfony\Latte\Parameters\Document;
-use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -58,7 +58,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->alias( CoreExtension::class, 'latte.core.extension' )
         //
         // ️📦️ - Global Parameters
-              ->set( 'latte.parameters.global', GlobalParameters::class )
+              ->set( 'latte.parameters.global', Parameters::class )
               ->args(
                   [
                       param( 'kernel.environment' ),               // Environment<string>
@@ -76,12 +76,12 @@ return static function ( ContainerConfigurator $container ) : void {
               )
               ->autowire()
               ->public()
-              ->alias( GlobalParameters::class, 'latte.parameters.global' )
+              ->alias( Parameters::class, 'latte.parameters.global' )
         //
         //
         // ☕ - Document Parameters
               ->set( 'latte.parameters.document', Document::class )
-//              ->args(
+        //              ->args(
 //                  [
 //                      service( 'core.service.request' ),
 //                      service( 'core.service.content' ),
@@ -89,8 +89,6 @@ return static function ( ContainerConfigurator $container ) : void {
 //                      service( 'logger' )->nullOnInvalid(),
 //                  ],
 //              )
-              ->autowire()
-              ->public()
               ->alias( Document::class, 'latte.parameters.document' )
     ;
 };

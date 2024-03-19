@@ -10,7 +10,6 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use Latte\Engine;
 use Latte\Extension;
-use Northrook\Symfony\Latte\Parameters\GlobalParameters;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -43,7 +42,7 @@ class Environment
         private readonly ParameterBagInterface $parameterBag,
         public readonly Options                $options,
         private readonly CoreExtension         $coreExtension,
-        private readonly GlobalParameters      $globalParameters,
+        private readonly Parameters            $globalParameters,
         protected ?LoggerInterface             $logger = null,
         protected ?Stopwatch                   $stopwatch = null,
     ) {
