@@ -7,6 +7,7 @@ declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte;
 use Latte\Engine;
 use Latte\Extension;
@@ -74,6 +75,7 @@ class Environment
         return $render;
     }
 
+    #[Deprecated]
     public function clearCache() : void {
 
         $fs = new Filesystem();
@@ -88,6 +90,7 @@ class Environment
         }
     }
 
+    #[Deprecated]
     public static function parameters( array $parameters ) : array {
 
         foreach ( $parameters as $key => $value ) {
@@ -99,6 +102,7 @@ class Environment
         return $parameters;
     }
 
+    #[Deprecated]
     public function addPreprocessor( Preprocessor ...$preprocessor ) : self {
 
         $this->preprocessors = array_merge( $this->preprocessors, $preprocessor );
@@ -106,6 +110,7 @@ class Environment
         return $this;
     }
 
+    #[Deprecated]
     public function addExtension( Extension ...$extension ) : self {
 
         $this->extensions = array_merge( $this->extensions, $extension );
@@ -183,6 +188,7 @@ class Environment
      *
      * @return object|array
      */
+    #[Deprecated]
     private function templateParameters( object | array | null $parameters ) : object | array {
 
         if ( is_object( $parameters ) ) {
@@ -226,8 +232,8 @@ class Environment
      * @return string
      * @throws FileNotFoundException
      *
-     * @deprecated
      */
+    #[Deprecated]
     private function templateFilePath( string $load ) : string {
 
 //        // Assume it's a template string, if it contains '{' and '}'.

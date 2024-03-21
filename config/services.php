@@ -2,10 +2,10 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+
+use Northrook\Symfony\Latte\Core;
 use Northrook\Symfony\Latte\CoreExtension;
-use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Parameters;
-use Northrook\Symfony\Latte\Parameters\Document;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -17,7 +17,9 @@ return static function ( ContainerConfigurator $container ) : void {
 
     // Parameters
     $container->parameters()
-              ->set( 'latte.global_parameters_key', 'get' )
+              ->set( 'latte.parameter_key.application', 'get' )
+              ->set( 'latte.parameter_key.content', 'content' )
+              ->set( 'latte.parameter_key.document', 'document' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
     ;
@@ -26,17 +28,16 @@ return static function ( ContainerConfigurator $container ) : void {
     $container->services()
         //
         // ☕ - Latte Environment
-              ->set( 'latte.environment', Environment::class )
+              ->set( 'latte.environment', Core\Environment::class )
               ->args(
                   [
                       service( 'parameter_bag' ),
                       service( 'latte.core.extension' ),
-                      service( 'latte.parameters.global' ),
                       service( 'logger' )->nullOnInvalid(),
                       service( 'debug.stopwatch' )->nullOnInvalid(),
                   ],
               )
-              ->alias( Environment::class, 'latte.environment' )
+              ->alias( Core\Environment::class, 'latte.environment' )
         //
         // 🧩️ - Latte Extension
               ->set( 'latte.core.extension', CoreExtension::class )
@@ -49,7 +50,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->alias( CoreExtension::class, 'latte.core.extension' )
         //
         // ️📦️ - Global Parameters
-              ->set( 'latte.parameters.global', Parameters::class )
+              ->set( 'latte.parameters.application', Parameters\Application::class )
               ->args(
                   [
                       param( 'kernel.environment' ),               // Environment<string>
@@ -67,19 +68,36 @@ return static function ( ContainerConfigurator $container ) : void {
               )
               ->autowire()
               ->public()
-              ->alias( Parameters::class, 'latte.parameters.global' )
+              ->alias( Parameters\Application::class, 'latte.parameters.application' )
         //
         //
         // ☕ - Document Parameters
-              ->set( 'latte.parameters.document', Document::class )
+              ->set( 'latte.parameters.content', Parameters\Content::class )
         //              ->args(
-//                  [
-//                      service( 'core.service.request' ),
-//                      service( 'core.service.content' ),
-//                      service( 'core.service.pathfinder' ),
-//                      service( 'logger' )->nullOnInvalid(),
-//                  ],
-//              )
-              ->alias( Document::class, 'latte.parameters.document' )
+        //                  [
+        //                      service( 'core.service.request' ),
+        //                      service( 'core.service.content' ),
+        //                      service( 'core.service.pathfinder' ),
+        //                      service( 'logger' )->nullOnInvalid(),
+        //                  ],
+        //              )
+              ->autowire()
+              ->public()
+              ->alias( Parameters\Content::class, 'latte.parameters.content' )
+        //
+        //
+        // ☕ - Document Parameters
+              ->set( 'latte.parameters.document', Parameters\Document::class )
+        //              ->args(
+        //                  [
+        //                      service( 'core.service.request' ),
+        //                      service( 'core.service.content' ),
+        //                      service( 'core.service.pathfinder' ),
+        //                      service( 'logger' )->nullOnInvalid(),
+        //                  ],
+        //              )
+              ->autowire()
+              ->public()
+              ->alias( Parameters\Document::class, 'latte.parameters.document' )
     ;
 };
