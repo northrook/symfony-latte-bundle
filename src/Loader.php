@@ -6,7 +6,7 @@ use Latte;
 use LogicException;
 use Northrook\Logger\Timer;
 use Northrook\Support\Attributes\EntryPoint;
-use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
+use Northrook\Symfony\Latte\Preprocessor\PreprocessorInterface;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -337,38 +337,6 @@ class Loader implements Latte\Loader
 
         return $this->getTemplatePath( $name )->value;
 
-    }
-
-    /** File Loader Only
-     *
-     * @param string  $string
-     *
-     * @return string
-     */
-    private function normalizePath( string $string ) : string {
-
-        $path   = [];
-        $string = strtr( $string, '\\', '/' );
-
-        if ( str_contains( $string, '/' ) === false ) {
-            return $string;
-        }
-
-        foreach ( explode( '/', $string ) as $part ) {
-            if ( $part === '..' && $path && end( $path ) !== '..' ) {
-                array_pop( $path );
-            }
-            else {
-                if ( $part !== '.' ) {
-                    $path[] = $part;
-                }
-            }
-        }
-
-        return implode(
-            separator : DIRECTORY_SEPARATOR,
-            array     : $path,
-        );
     }
 
 

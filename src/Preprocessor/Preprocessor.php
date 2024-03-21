@@ -1,10 +1,9 @@
 <?php declare( strict_types = 1 );
 
-namespace Northrook\Symfony\Latte;
+namespace Northrook\Symfony\Latte\Preprocessor;
 
 use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Support\Str;
-use Northrook\Symfony\Latte\Interfaces\PreprocessorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 

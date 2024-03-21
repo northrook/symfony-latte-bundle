@@ -4,10 +4,10 @@ declare( strict_types = 1 );
 namespace Northrook\Symfony\Latte\Core;
 
 use Latte;
-use Northrook\Symfony\Latte\CoreExtension;
+use Northrook\Symfony\Latte\Core;
 use Northrook\Symfony\Latte\Loader;
 use Northrook\Symfony\Latte\Parameters as Parameters;
-use Northrook\Symfony\Latte\Preprocessor;
+use Northrook\Symfony\Latte\Preprocessor\Preprocessor;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
@@ -20,9 +20,8 @@ final class Environment
 
     private readonly string $cacheDirectory;
 
-    private array                $parameters = [];
-    private ?Parameters\Content  $content    = null;
-    private ?Parameters\Document $document   = null;
+    private ?Parameters\Content  $content  = null;
+    private ?Parameters\Document $document = null;
 
 
     /** @var Latte\Extension[] */
@@ -33,7 +32,7 @@ final class Environment
 
     public function __construct(
         private readonly ParameterBagInterface  $parameterBag,
-        private readonly CoreExtension          $coreExtension,
+        private readonly Core\Extension         $coreExtension,
         private readonly Parameters\Application $application,
         private readonly ?LoggerInterface       $logger = null,
         private readonly ?Stopwatch             $stopwatch = null,
@@ -208,15 +207,13 @@ final class Environment
             return $parameters;
         }
 
-        $this->parameters = Environment::parameters(
+        return Environment::parameters(
             [
                 $this->parameterBag->get( 'latte.parameter_key.application' ) => $this->application,
                 $this->parameterBag->get( 'latte.parameter_key.content' )     => $this->content,
                 $this->parameterBag->get( 'latte.parameter_key.document' )    => $this->document,
             ] + $parameters,
         );
-
-        return $this->parameters;
     }
 
     public static function parameters( array $parameters ) : array {

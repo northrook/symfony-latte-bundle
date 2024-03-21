@@ -60,7 +60,6 @@ class Application
     public function __construct(
         public readonly string                  $environment,
         public readonly bool                    $debug,
-        public readonly Document                $document,
         private readonly RequestStack           $requestStack,
         private readonly UrlGeneratorInterface  $urlGenerator,
         private readonly ?TokenStorageInterface $tokenStorage = null,

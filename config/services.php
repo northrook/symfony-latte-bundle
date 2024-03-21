@@ -55,7 +55,6 @@ return static function ( ContainerConfigurator $container ) : void {
                   [
                       param( 'kernel.environment' ),               // Environment<string>
                       param( 'kernel.debug' ),                     // Debug<bool>
-                      service( 'latte.parameters.document' ),               // RequestStack
                       service( 'request_stack' ),               // RequestStack
                       service( 'router' ),                      // UrlGeneratorInterface
                       service( 'security.token_storage' )       // TokenStorageInterface
