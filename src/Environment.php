@@ -40,13 +40,12 @@ class Environment
 
     public function __construct(
         private readonly ParameterBagInterface $parameterBag,
-        public readonly Options                $options,
         private readonly CoreExtension         $coreExtension,
         private readonly Parameters            $globalParameters,
         protected ?LoggerInterface             $logger = null,
         protected ?Stopwatch                   $stopwatch = null,
     ) {
-//        $this->cacheDirectory = new Path( $this->parameterBag->get( 'dir.latte.cache' ) );
+        $this->cacheDirectory = new Path( $this->parameterBag->get( 'dir.latte.cache' ) );
     }
 
 
@@ -79,7 +78,7 @@ class Environment
 
         $fs = new Filesystem();
 
-        $fs->remove( (string) $this->options->cacheDirectory );
+        $fs->remove( (string) $this->cacheDirectory );
 
     }
 
@@ -154,11 +153,10 @@ class Environment
             $this->latte->addExtension( $extension );
         }
 
-        $this->latte->setTempDirectory( (string) $this->options->cacheDirectory )
+        $this->latte->setTempDirectory( (string) $this->cacheDirectory )
                     ->setLoader(
                         new Loader(
                             $this->parameterBag,
-                            $this->options,
                             self::$templates,
                             $this->latte->getExtensions(),
                             $this->preprocessors,
@@ -191,7 +189,8 @@ class Environment
             return $parameters;
         }
 
-        $this->parameters[ $this->options->globalVariable ] = $this->globalParameters;
+        $this->parameters[ $this->parameterBag->get( 'latte.global_parameters_key' ) ] = $this->globalParameters;
+
         //
         // if ( null === $parameters && $this->documentParameters ) {
         //     $this->parameters[ $this->options->documentVariable ] = $this->documentParameters;

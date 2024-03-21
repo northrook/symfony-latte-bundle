@@ -4,7 +4,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Environment;
-use Northrook\Symfony\Latte\Options;
 use Northrook\Symfony\Latte\Parameters;
 use Northrook\Symfony\Latte\Parameters\Document;
 
@@ -18,6 +17,7 @@ return static function ( ContainerConfigurator $container ) : void {
 
     // Parameters
     $container->parameters()
+              ->set( 'latte.global_parameters_key', 'get' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
     ;
@@ -25,20 +25,11 @@ return static function ( ContainerConfigurator $container ) : void {
     // Services
     $container->services()
         //
-        // 📦️ - Latte Options
-              ->set( 'latte.options', Options::class )
-              ->args(
-                  [
-                      service( 'parameter_bag' ),
-                  ],
-              )
-        //
         // ☕ - Latte Environment
               ->set( 'latte.environment', Environment::class )
               ->args(
                   [
                       service( 'parameter_bag' ),
-                      service( 'latte.options' ),
                       service( 'latte.core.extension' ),
                       service( 'latte.parameters.global' ),
                       service( 'logger' )->nullOnInvalid(),

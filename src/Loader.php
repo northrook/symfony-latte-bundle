@@ -41,7 +41,6 @@ class Loader implements Latte\Loader
 
     public function __construct(
         private readonly ParameterBagInterface $parameterBag,
-        private readonly Options               $options,
         // Key-value array of name and template markup.
         public readonly ?array                 $templates = null,
         private readonly array                 $extensions = [],
@@ -191,28 +190,6 @@ class Loader implements Latte\Loader
         return $content;
     }
 
-    private function getTemplatePath( ?string $name = null ) : ?Path {
-
-        $directories = $this->getTemplateDirectories();
-
-        $path = ( $directories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
-
-        if ( $path && file_exists( $path ) ) {
-            return new Path( $path );
-        }
-        else {
-            foreach ( $directories as $parameter => $path ) {
-                if ( str_contains( $parameter, Loader::TEMPLATE_DIR_PARAMETER )
-                     && file_exists( $path . $name ) ) {
-                    return new Path( $path . $name );
-                }
-            }
-
-        }
-
-        return null;
-    }
-
 
     public function getContent( string $name ) : string {
 
@@ -292,15 +269,6 @@ class Loader implements Latte\Loader
         return $this->compile( $content );
     }
 
-    private function getTemplateDirectories() : array {
-        return $this->templateDirectories ??= array_filter(
-            array    : $this->parameterBag->all(),
-            callback : static fn ( $value, $key ) => is_string( $value ) && str_contains( $key, 'dir.latte' ),
-            mode     : ARRAY_FILTER_USE_BOTH,
-        );
-    }
-
-
     /** Checks whether template has expired.
      *
      * * Expired templates will be regenerated on demand.
@@ -316,7 +284,7 @@ class Loader implements Latte\Loader
             return false;
         }
 
-        $mtime = @filemtime( $this->options->templateDirectory->value . $name ); // @ - stat may fail
+        $mtime = @filemtime( $this->getTemplatePath( $name )->value ); // @ - stat may fail
 
         return !$mtime || $mtime > $time;
     }
@@ -340,8 +308,8 @@ class Loader implements Latte\Loader
             return $name;
         }
 
-        if ( $this->options->templateDirectory->value || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
-            $name = $this->normalizePath( $referringName . '/../' . $name );
+        if ( $this->getTemplatePath()->value || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
+            $name = Path::normalize( $referringName . '/../' . $name );
         }
 
         return $name;
@@ -367,7 +335,7 @@ class Loader implements Latte\Loader
         /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
         /// That way we can have a default template, like _document.latte
 
-        return $this->options->templateDirectory->value . $name;
+        return $this->getTemplatePath( $name )->value;
 
     }
 
@@ -402,4 +370,45 @@ class Loader implements Latte\Loader
             array     : $path,
         );
     }
+
+
+    /// --------------------------------------------------------------------------------
+
+
+    /**
+     * Returns template from registered template directories.
+     *
+     * @param null|string  $name
+     *
+     * @return null|Path
+     */
+    private function getTemplatePath( ?string $name = null ) : ?Path {
+
+        // Retrieve all parameters registered as Latte directories
+        $this->templateDirectories ??= array_filter(
+            array    : $this->parameterBag->all(),
+            callback : static fn ( $value, $key ) => is_string( $value ) && str_contains( $key, 'dir.latte' ),
+            mode     : ARRAY_FILTER_USE_BOTH,
+        );
+
+        // Check if the Application has the requested template
+        $path = ( $this->templateDirectories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
+
+        // If it does, return the Path
+        if ( $path && file_exists( $path ) ) {
+            return new Path( $path );
+        }
+
+        // Else, loop through registered template directories until one is found
+        foreach ( $this->templateDirectories as $parameter => $path ) {
+            if ( str_contains( $parameter, Loader::TEMPLATE_DIR_PARAMETER )
+                 && file_exists( $path . $name ) ) {
+                return new Path( $path . $name );
+            }
+        }
+
+        // If none is found, return null
+        return null;
+    }
+
 }

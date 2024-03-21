@@ -2,12 +2,14 @@
 
 namespace Northrook\Symfony\Latte;
 
+use JetBrains\PhpStorm\Deprecated;
 use Northrook\Logger\Log;
 use Northrook\Types\Path;
 use Northrook\Types\Type\Properties;
 use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
+#[Deprecated]
 final class Options extends Properties
 {
     public string $globalVariable   = 'get';
