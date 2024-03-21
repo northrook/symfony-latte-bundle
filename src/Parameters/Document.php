@@ -2,12 +2,12 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use Northrook\Elements\Body;
+use Northrook\Elements\Element\Attributes;
 
 class Document
 {
 
-    public readonly Body $body;
+    public readonly Attributes $body;
 
     public string $title = __METHOD__;
 
@@ -15,10 +15,10 @@ class Document
         private readonly Application $application,
         private readonly Content     $content,
     ) {
-        $this->body = new Body(
+        $this->body = new Attributes(
             id          : $this->application->request->getPathInfo(),
             class       : 'test cass',
-            data_strlen : strlen( $this->content->__toString() ),
+            data_strlen : strlen( $this->content->__toString( å ) ),
         );
     }
 

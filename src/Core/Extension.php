@@ -65,7 +65,11 @@ final class Extension extends Latte\Extension
             'var_dump'    => static function ( ...$args ) {
                 var_dump( ... $args );
             },
-            'dump'        => static fn ( ...$args ) => dump( $args ),
+            'dump'        => static function ( ...$args ) {
+                foreach ( $args as $arg ) {
+                    dump( $arg );
+                }
+            },
             'dd'          => static fn ( ...$args ) => dd( $args ),
         ];
     }
