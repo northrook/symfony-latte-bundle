@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Stopwatch\Stopwatch;
-use Symfony\Contracts\Service\Attribute\Required;
 
 final class Environment
 {
@@ -21,10 +20,9 @@ final class Environment
 
     private readonly string $cacheDirectory;
 
-    private array                  $parameters = [];
-    private Parameters\Application $application;
-    private ?Parameters\Content    $content    = null;
-    private ?Parameters\Document   $document   = null;
+    private array                $parameters = [];
+    private ?Parameters\Content  $content    = null;
+    private ?Parameters\Document $document   = null;
 
 
     /** @var Latte\Extension[] */
@@ -34,17 +32,13 @@ final class Environment
     private array $preprocessors = [];
 
     public function __construct(
-        private readonly ParameterBagInterface $parameterBag,
-        private readonly CoreExtension         $coreExtension,
-        private readonly ?LoggerInterface      $logger = null,
-        private readonly ?Stopwatch            $stopwatch = null,
+        private readonly ParameterBagInterface  $parameterBag,
+        private readonly CoreExtension          $coreExtension,
+        private readonly Parameters\Application $application,
+        private readonly ?LoggerInterface       $logger = null,
+        private readonly ?Stopwatch             $stopwatch = null,
     ) {
         $this->cacheDirectory = $this->parameterBag->get( 'dir.latte.cache' );
-    }
-
-    #[Required]
-    public function setApplication( Parameters\Application $application ) : void {
-        $this->application = $application;
     }
 
     public function setDocument( Parameters\Document $document ) : void {
@@ -172,11 +166,11 @@ final class Environment
      */
     public function addPreprocessor( Preprocessor ...$preprocessor ) : self {
 
-        foreach ( $preprocessor as $item ) {
-            if ( in_array( $item, $this->preprocessors, true ) ) {
+        foreach ( $preprocessor as $ext ) {
+            if ( in_array( $ext, $this->preprocessors, true ) ) {
                 continue;
             }
-            $this->preprocessors[] = $preprocessor;
+            $this->preprocessors[] = $ext;
         }
 
         return $this;

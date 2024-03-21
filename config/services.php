@@ -4,7 +4,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 
 use Northrook\Symfony\Latte\Core;
-use Northrook\Symfony\Latte\CoreExtension;
 use Northrook\Symfony\Latte\Parameters;
 
 return static function ( ContainerConfigurator $container ) : void {
@@ -33,6 +32,7 @@ return static function ( ContainerConfigurator $container ) : void {
                   [
                       service( 'parameter_bag' ),
                       service( 'latte.core.extension' ),
+                      service( 'latte.parameters.application' ),
                       service( 'logger' )->nullOnInvalid(),
                       service( 'debug.stopwatch' )->nullOnInvalid(),
                   ],
@@ -40,14 +40,14 @@ return static function ( ContainerConfigurator $container ) : void {
               ->alias( Core\Environment::class, 'latte.environment' )
         //
         // 🧩️ - Latte Extension
-              ->set( 'latte.core.extension', CoreExtension::class )
+              ->set( 'latte.core.extension', Core\Extension::class )
               ->args(
                   [
                       service( 'router' ),
                       service( 'logger' )->nullOnInvalid(),
                   ],
               )
-              ->alias( CoreExtension::class, 'latte.core.extension' )
+              ->alias( Core\Extension::class, 'latte.core.extension' )
         //
         // ️📦️ - Global Parameters
               ->set( 'latte.parameters.application', Parameters\Application::class )

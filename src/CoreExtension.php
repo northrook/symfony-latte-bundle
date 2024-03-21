@@ -2,6 +2,7 @@
 
 namespace Northrook\Symfony\Latte;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte;
 use Latte\Runtime\Template;
 use Northrook\Symfony\Latte\Nodes\ClassNode;
@@ -12,6 +13,7 @@ use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[Deprecated]
 final class CoreExtension extends Latte\Extension
 {
     private Template $template;
