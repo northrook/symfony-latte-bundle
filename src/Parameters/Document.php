@@ -4,7 +4,8 @@ namespace Northrook\Symfony\Latte\Parameters;
 
 use Northrook\Elements\Body;
 use Northrook\Support\Str;
-use Northrook\Symfony\Core\Services\PathfinderService;
+use Northrook\Symfony\Latte\Parameters\Content\Meta;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 
@@ -16,18 +17,21 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class Document
 {
 
+
     protected array $scripts     = [];
     protected array $stylesheets = [];
-    protected array $meta        = [];
+
+    /** @var Meta[] */
+    protected array $meta = [];
 
     public readonly Body $body;
     public string        $title = __METHOD__;
 
     public function __construct(
-        private readonly Application       $application,
-        private readonly Content           $content,
-        private readonly PathfinderService $path,
-        private readonly ?Stopwatch        $stopwatch = null,
+        private readonly Application      $application,
+        private readonly Content          $content,
+        private readonly ?LoggerInterface $logger = null,
+        private readonly ?Stopwatch       $stopwatch = null,
     ) {
 
         $this->body = new Body(
@@ -35,8 +39,17 @@ class Document
             class       : 'test cass',
             data_strlen : strlen( $this->content->__toString() ),
         );
-    }
 
+        foreach ( [
+            'title'       => $this->getTitle(),
+            'description' => $this->getDescription(),
+            'keywords'    => $this->getKeywords(),
+            'robots'      => $this->getRobots(),
+            'author'      => $this->getAuthor(),
+        ] as $name => $content ) {
+            $this->addMeta( $name, $content );
+        }
+    }
 
     public function __get( string $name ) {
         $name = "get" . ucfirst( $name );
@@ -44,7 +57,45 @@ class Document
             return $this->$name() ?? null;
         }
 
+        if ( isset( $this->meta[ $name ] ) ) {
+            return $this->meta[ $name ];
+        }
+
         return null;
+    }
+
+    public function meta( ...$get ) : array {
+        $return = [];
+
+        foreach ( $get as $name ) {
+
+            if ( !isset( $this->meta[ $name ] ) ) {
+                $this->logger->warning(
+                    "The {service} was requested on {route}, but was not available.",
+                    [
+                        'service'   => 'meta',
+                        'route'     => $this->application->request->getPathInfo(),
+                        'inventory' => $this->meta,
+                    ],
+                );
+                continue;
+            }
+
+            $meta = $this->meta[ $name ];
+
+            if ( true === $meta->printed ) {
+                continue;
+            }
+
+            $return[ $name ] = $meta->get();
+            $meta->printed   = true;
+        }
+
+        return $return;
+    }
+
+    private function getMeta() : array {
+        return $this->meta;
     }
 
     private function getScripts() : array {
@@ -55,10 +106,25 @@ class Document
         return $this->stylesheets;
     }
 
-    private function getMeta() : array {
-        return $this->meta;
+    private function getTitle() {
+        return __METHOD__;
     }
 
+    private function getDescription() {
+        return __METHOD__;
+    }
+
+    private function getKeywords() {
+        return __METHOD__;
+    }
+
+    private function getRobots() {
+        return __METHOD__;
+    }
+
+    private function getAuthor() {
+        return __METHOD__;
+    }
 
     /**
      *
@@ -84,6 +150,12 @@ class Document
             $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
             $this->scripts[] = Str::end( $path, '.js' );
         }
+        return $this;
+    }
+
+    public function addMeta( string $name, string $content ) : self {
+        $meta                      = new Meta( $name, $content );
+        $this->meta[ $meta->name ] = $meta;
         return $this;
     }
 }

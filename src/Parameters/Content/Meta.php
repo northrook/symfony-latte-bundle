@@ -13,6 +13,11 @@ use Northrook\Support\Str;
  */
 final class Meta
 {
+    public const INFO = [
+        'description', 'keywords', 'robots', 'author',
+    ];
+
+
     private string $name;
     private string $content;
     private bool   $printed = false;
