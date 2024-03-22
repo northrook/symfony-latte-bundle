@@ -72,14 +72,6 @@ return static function ( ContainerConfigurator $container ) : void {
         //
         // ☕ - Document Parameters
               ->set( 'latte.parameters.content', Parameters\Content::class )
-        //              ->args(
-        //                  [
-        //                      service( 'core.service.request' ),
-        //                      service( 'core.service.content' ),
-        //                      service( 'core.service.pathfinder' ),
-        //                      service( 'logger' )->nullOnInvalid(),
-        //                  ],
-        //              )
               ->autowire()
               ->public()
               ->alias( Parameters\Content::class, 'latte.parameters.content' )
