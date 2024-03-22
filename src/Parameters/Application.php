@@ -10,6 +10,7 @@
 namespace Northrook\Symfony\Latte\Parameters;
 
 
+use Northrook\Symfony\Latte\Parameters\Get\Theme;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;

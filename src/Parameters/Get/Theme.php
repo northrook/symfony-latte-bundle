@@ -1,6 +1,6 @@
 <?php
 
-namespace Northrook\Symfony\Latte\Parameters;
+namespace Northrook\Symfony\Latte\Parameters\Get;
 
 use Stringable;
 
