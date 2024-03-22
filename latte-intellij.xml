@@ -3,9 +3,8 @@
     <component name="LattePluginSettings">
         <option name="variableSettings">
             <list>
-                <LatteVariableSettings VarName="get" VarType="Northrook\Symfony\Latte\Parameters\GlobalParameters"/>
-                <LatteVariableSettings VarName="document"
-                                       VarType="Northrook\Symfony\Latte\Parameters\DocumentParameters"/>
+                <LatteVariableSettings VarName="get" VarType="Northrook\Symfony\Latte\Parameters\Application"/>
+                <LatteVariableSettings VarName="document" VarType="Northrook\Symfony\Latte\Parameters\Document"/>
             </list>
         </option>
     </component>
