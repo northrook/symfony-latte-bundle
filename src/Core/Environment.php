@@ -210,8 +210,6 @@ final class Environment
         return Environment::parameters(
             [
                 $this->parameterBag->get( 'latte.parameter_key.application' ) => $this->application,
-                $this->parameterBag->get( 'latte.parameter_key.content' )     => $this->content,
-                $this->parameterBag->get( 'latte.parameter_key.document' )    => $this->document,
             ] + $parameters,
         );
     }

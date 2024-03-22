@@ -13,11 +13,6 @@ use Northrook\Support\Str;
  */
 final class Meta
 {
-    public const INFO = [
-        'description', 'keywords', 'robots', 'author',
-    ];
-
-
     private string $name;
     private string $content;
     private bool   $printed = false;
@@ -38,9 +33,13 @@ final class Meta
         return null;
     }
 
-    public function __toString() : string {
-        return "<meta name=\"$this->name\" content=\"$this->content\">";
+    public function print() : void {
+        echo "<meta name=\"$this->name\" content=\"$this->content\">";
+    }
 
+    public function __toString() : string {
+        $this->printed = true;
+        return $this->content;
     }
 
     public function get() : array {

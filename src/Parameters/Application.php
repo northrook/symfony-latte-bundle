@@ -43,7 +43,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  *
  * @property string            $sitename
  * @property string            $language
- * @property string            $theme
+ * @property Theme             $theme
  * @property ?Request          $request
  * @property ?UserInterface    $user
  * @property ?SessionInterface $session
@@ -75,6 +75,11 @@ class Application
 
         return null;
     }
+
+    protected function getTheme() : Theme {
+        return new Theme();
+    }
+
 
     /**
      * @return TokenInterface|null

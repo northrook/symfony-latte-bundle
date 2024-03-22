@@ -17,8 +17,6 @@ return static function ( ContainerConfigurator $container ) : void {
     // Parameters
     $container->parameters()
               ->set( 'latte.parameter_key.application', 'get' )
-              ->set( 'latte.parameter_key.content', 'content' )
-              ->set( 'latte.parameter_key.document', 'document' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
     ;

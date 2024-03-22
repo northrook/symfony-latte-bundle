@@ -67,6 +67,14 @@ class Document
     public function meta( ...$get ) : array {
         $return = [];
 
+        if ( count( $get ) === 1 ) {
+            $get = match ( $get[ 0 ] ) {
+                'all'   => array_keys( $this->meta ),
+                'info'  => [ 'title', 'description', 'keywords', 'robots', 'author' ],
+                default => $get,
+            };
+        }
+
         foreach ( $get as $name ) {
 
             if ( !isset( $this->meta[ $name ] ) ) {
@@ -87,8 +95,7 @@ class Document
                 continue;
             }
 
-            $return[ $name ] = $meta->get();
-            $meta->printed   = true;
+            $return += $meta->get();
         }
 
         return $return;
