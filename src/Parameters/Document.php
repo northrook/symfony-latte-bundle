@@ -2,30 +2,35 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use Northrook\Elements\Body;
-use Northrook\Support\Str;
-use Northrook\Symfony\Latte\Parameters\Content\Meta;
+use Northrook\Elements\Element\Attributes;
+use Northrook\Symfony\Latte\Parameters\Type\Meta;
+use Northrook\Symfony\Latte\Parameters\Type\Script;
+use Northrook\Symfony\Latte\Parameters\Type\Stylesheet;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /**
- * @property array $scripts
- * @property array $stylesheets
- * @property array $meta
+ * @property string $title
+ * @property string $description
+ * @property array  $scripts
+ * @property array  $stylesheets
+ * @property array  $meta
  */
 class Document
 {
 
 
-    protected array $scripts     = [];
+    /** @var Script[] */
+    protected array $scripts = [];
+
+    /** @var Stylesheet[] */
     protected array $stylesheets = [];
 
     /** @var Meta[] */
     protected array $meta = [];
 
-    public readonly Body $body;
-    public string        $title = __METHOD__;
+    public readonly Attributes $body;
 
     public function __construct(
         private readonly Application      $application,
@@ -34,17 +39,18 @@ class Document
         private readonly ?Stopwatch       $stopwatch = null,
     ) {
 
-        $this->body = new Body(
+        $this->body = new Attributes(
             id          : $this->application->request->getPathInfo(),
             class       : 'test cass',
             data_strlen : strlen( $this->content->__toString() ),
         );
 
         foreach ( [
+            'robots'      => $this->getRobots(),
+            // 'canonical'   => $this->getCanonical(),
             'title'       => $this->getTitle(),
             'description' => $this->getDescription(),
             'keywords'    => $this->getKeywords(),
-            'robots'      => $this->getRobots(),
             'author'      => $this->getAuthor(),
         ] as $name => $content ) {
             $this->addMeta( $name, $content );
@@ -52,16 +58,22 @@ class Document
     }
 
     public function __get( string $name ) {
+        if ( isset( $this->meta[ $name ] ) ) {
+            return $this->meta[ $name ];
+        }
+
+
         $name = "get" . ucfirst( $name );
         if ( method_exists( $this, $name ) ) {
             return $this->$name() ?? null;
         }
 
-        if ( isset( $this->meta[ $name ] ) ) {
-            return $this->meta[ $name ];
-        }
-
         return null;
+    }
+
+    public function __set( string $name, mixed $value ) {
+        $meta                      = new Meta( $name, $value );
+        $this->meta[ $meta->name ] = $meta;
     }
 
     public function meta( ...$get ) : array {
@@ -146,16 +158,18 @@ class Document
      */
     public function addStylesheet( string ...$styles ) : self {
         foreach ( $styles as $path ) {
-            $path                = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/styles/{$path}";
-            $this->stylesheets[] = Str::end( $path, '.css' );
+            // $path                = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/styles/{$path}";
+            // $this->stylesheets[] = Str::end( $path, '.css' );
+            $this->stylesheets[] = new Stylesheet( $path );
         }
         return $this;
     }
 
     public function addScript( string ...$scripts ) : self {
         foreach ( $scripts as $path ) {
-            $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
-            $this->scripts[] = Str::end( $path, '.js' );
+            // $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
+            // $this->scripts[] = Str::end( $path, '.js' );
+            $this->scripts[] = new Script( $path );
         }
         return $this;
     }

@@ -2,7 +2,7 @@
 
 declare( strict_types = 1 );
 
-namespace Northrook\Symfony\Latte\Parameters\Content;
+namespace Northrook\Symfony\Latte\Parameters\Type;
 
 use Northrook\Support\Str;
 

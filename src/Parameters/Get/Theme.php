@@ -4,6 +4,10 @@ namespace Northrook\Symfony\Latte\Parameters\Get;
 
 use Stringable;
 
+/**
+ * @property string $color
+ * @property string $scheme
+ */
 class Theme implements Stringable
 {
     private string $theme = 'system';
