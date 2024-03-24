@@ -12,12 +12,12 @@ class Theme implements Stringable
 {
     private string $theme = 'system';
     // private string $mode  = 'system';
-    private string $color = '#29b6fa';
+    private string $hex = '#29b6fa';
 
 
     public function __get( string $name ) {
         return match ( $name ) {
-            'color'  => $this->color,
+            'color'  => $this->hex,
             'scheme' => $this->theme === 'system' ? 'normal' : $this->theme,
             default  => null,
         };
