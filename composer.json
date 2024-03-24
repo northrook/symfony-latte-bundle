@@ -28,7 +28,8 @@
     "foroco/php-browser-detection": "^2.7",
     "symfony/filesystem": "^7",
     "northrook/elements": "dev-main",
-    "ext-fileinfo": "*"
+    "ext-fileinfo": "*",
+    "northrook/symfony-assets-bundle": "dev-main"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",

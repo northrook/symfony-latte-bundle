@@ -3,9 +3,9 @@
 namespace Northrook\Symfony\Latte\Parameters;
 
 use Northrook\Elements\Element\Attributes;
+use Northrook\Symfony\Assets\Script;
+use Northrook\Symfony\Assets\Stylesheet;
 use Northrook\Symfony\Latte\Parameters\Type\Meta;
-use Northrook\Symfony\Latte\Parameters\Type\Script;
-use Northrook\Symfony\Latte\Parameters\Type\Stylesheet;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
