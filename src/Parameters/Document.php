@@ -22,10 +22,10 @@ class Document
 
 
     /** @var Script[] */
-    protected array $scripts = [];
+    protected array $script = [];
 
     /** @var Stylesheet[] */
-    protected array $stylesheets = [];
+    protected array $stylesheet = [];
 
     /** @var Meta[] */
     protected array $meta = [];
@@ -118,11 +118,11 @@ class Document
     }
 
     private function getScripts() : array {
-        return $this->scripts;
+        return $this->script;
     }
 
     private function getStylesheets() : array {
-        return $this->stylesheets;
+        return $this->stylesheet;
     }
 
     private function getTitle() {
@@ -160,7 +160,7 @@ class Document
         foreach ( $styles as $path ) {
             // $path                = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/styles/{$path}";
             // $this->stylesheets[] = Str::end( $path, '.css' );
-            $this->stylesheets[] = new Stylesheet( $path );
+            $this->stylesheet[] = new Stylesheet( $path );
         }
         return $this;
     }
@@ -169,7 +169,7 @@ class Document
         foreach ( $scripts as $path ) {
             // $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
             // $this->scripts[] = Str::end( $path, '.js' );
-            $this->scripts[] = new Script( $path );
+            $this->script[] = new Script( $path );
         }
         return $this;
     }
