@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Based on php-ico by Chris Jean
  *
@@ -10,23 +9,34 @@
 
 namespace Northrook\Symfony\Latte\Core;
 
-final class IcoMaker
+use GdImage;
+use Northrook\Symfony\Core\File;
+
+
+class IcoMaker
 {
+    // private const REQUIRED_FUNCTIONS = [
+    //     'getimagesize',
+    //     'imagecreatefromstring',
+    //     'imagecreatetruecolor',
+    //     'imagecolortransparent',
+    //     'imagecolorallocatealpha',
+    //     'imagealphablending',
+    //     'imagesavealpha',
+    //     'imagesx',
+    //     'imagesy',
+    //     'imagecopyresampled',
+    // ];
+
     /**
      * Images in the BMP format.
-     *
-     * @var array
-     * @access private
      */
-    var array $_images = [];
+    private array $_images = [];
 
     /**
      * Flag to tell if the required functions exist.
-     *
-     * @var boolean
-     * @access private
      */
-    var bool $_has_requirements = false;
+    private readonly bool $preflight;
 
 
     /**
@@ -35,35 +45,20 @@ final class IcoMaker
      * If the constructor is not passed a file, a file will need to be supplied using the {@link PHP_ICO::add_image}
      * function in order to generate an ICO file.
      *
-     * @param bool|string  $file   Optional. Path to the source image file.
-     * @param array        $sizes  Optional. An array of sizes (each size is an array with a width and height) that the
-     *                             source image should be rendered at in the generated ICO file. If sizes are not
-     *                             supplied, the size of the source image will be used.
+     * @param ?string  $file   Optional. Path to the source image file.
+     * @param array    $sizes  Optional. An array of sizes (each size is an array with a width and height) that the source image should be rendered at in the generated ICO file. If sizes are not supplied, the size of the source image will be used.
      */
-    function __construct( bool | string $file = false, array $sizes = [] ) {
-        $required_functions = [
-            'getimagesize',
-            'imagecreatefromstring',
-            'imagecreatetruecolor',
-            'imagecolortransparent',
-            'imagecolorallocatealpha',
-            'imagealphablending',
-            'imagesavealpha',
-            'imagesx',
-            'imagesy',
-            'imagecopyresampled',
-        ];
+    public function __construct( ?string $file = null, array $sizes = [] ) {
+        // foreach ( static::REQUIRED_FUNCTIONS as $function ) {
+        //     if ( !function_exists( $function ) ) {
+        //         trigger_error(
+        //             "The PHP_ICO class was unable to find the $function function, which is part of the GD library. Ensure that the system has the GD library installed and that PHP has access to it through a PHP interface, such as PHP's GD module. Since this function was not found, the library will be unable to create ICO files.",
+        //         );
+        //         return;
+        //     }
+        // }
 
-        foreach ( $required_functions as $function ) {
-            if ( !function_exists( $function ) ) {
-                trigger_error(
-                    "The PHP_ICO class was unable to find the $function function, which is part of the GD library. Ensure that the system has the GD library installed and that PHP has access to it through a PHP interface, such as PHP's GD module. Since this function was not found, the library will be unable to create ICO files.",
-                );
-                return;
-            }
-        }
-
-        $this->_has_requirements = true;
+        $this->preflight = class_exists( GdImage::class );
 
         if ( $file ) {
             $this->add_image( $file, $sizes );
@@ -78,27 +73,24 @@ final class IcoMaker
      * different sized images in the resulting ICO file. For instance, a small source image can be used for the small
      * resolutions while a larger source image can be used for large resolutions.
      *
-     * @param array   $sizes  Optional. An array of sizes (each size is an array with a width and height) that the source
-     *                        image should be rendered at in the generated ICO file. If sizes are not supplied, the size
-     *                        of the source image will be used.
      * @param string  $file   Path to the source image file.
+     * @param array   $sizes  Optional. An array of sizes (each size is an array with a width and height) that the source image should be rendered at in the generated ICO file. If sizes are not supplied, the size of the source image will be used.
      *
      * @return boolean true on success and false on failure.
-     *
      */
-    function add_image( string $file, array $sizes = [] ) : bool {
-        if ( !$this->_has_requirements ) {
+    public function add_image( string $file, array $sizes = [] ) : bool {
+        if ( !$this->preflight ) {
             return false;
         }
 
-        if ( false === ( $im = $this->_load_image_file( $file ) ) ) {
+        if ( false === ( $image = $this->_load_image_file( $file ) ) ) {
             return false;
         }
+
 
         if ( empty( $sizes ) ) {
-            $sizes = [ imagesx( $im ), imagesy( $im ) ];
+            $sizes = [ imagesx( $image ), imagesy( $image ) ];
         }
-
 
         // If just a single size was passed, put it in array.
         if ( !is_array( $sizes[ 0 ] ) ) {
@@ -108,22 +100,22 @@ final class IcoMaker
         foreach ( $sizes as $size ) {
             [ $width, $height ] = $size;
 
-            $new_im = imagecreatetruecolor( $width, $height );
+            $new = imagecreatetruecolor( $width, $height );
 
-            imagecolortransparent( $new_im, imagecolorallocatealpha( $new_im, 0, 0, 0, 127 ) );
-            imagealphablending( $new_im, false );
-            imagesavealpha( $new_im, true );
+            imagecolortransparent( $new, imagecolorallocatealpha( $new, 0, 0, 0, 127 ) );
+            imagealphablending( $new, false );
+            imagesavealpha( $new, true );
 
-            $source_width  = imagesx( $im );
-            $source_height = imagesy( $im );
+            $source_width  = imagesx( $image );
+            $source_height = imagesy( $image );
 
             if ( false === imagecopyresampled(
-                    $new_im, $im, 0, 0, 0, 0, $width, $height, $source_width, $source_height,
+                    $new, $image, 0, 0, 0, 0, $width, $height, $source_width, $source_height,
                 ) ) {
                 continue;
             }
 
-            $this->_add_image_data( $new_im );
+            $this->_add_image_data( $new );
         }
 
         return true;
@@ -135,10 +127,12 @@ final class IcoMaker
      * @param string  $file  Path to save the ICO file data into.
      *
      * @return boolean true on success and false on failure.
-     *
      */
-    function save_ico( string $file ) : bool {
-        if ( !$this->_has_requirements ) {
+    public function save_ico( string $file ) : bool {
+
+        File::mkdir( dirname( $file ) );
+
+        if ( !$this->preflight ) {
             return false;
         }
 
@@ -149,7 +143,6 @@ final class IcoMaker
         if ( false === ( $fh = fopen( $file, 'w' ) ) ) {
             return false;
         }
-
 
         if ( false === ( fwrite( $fh, $data ) ) ) {
             fclose( $fh );
@@ -162,12 +155,32 @@ final class IcoMaker
     }
 
     /**
+     * Display the ICO file data.
+     *
+     * @return boolean true on success and false on failure.
+     */
+    public function render_ico() : bool {
+        if ( !$this->preflight ) {
+            return false;
+        }
+
+        if ( false === ( $data = $this->_get_ico_data() ) ) {
+            return false;
+        }
+
+        header( 'Content-Type: image/x-icon' );
+        echo $data;
+
+        return true;
+    }
+
+    /**
      * Generate the final ICO data by creating a file header and adding the image data.
      *
      * @access private
      */
-    function _get_ico_data() : bool | string {
-        if ( empty( $this->_images ) ) {
+    private function _get_ico_data() : bool | string {
+        if ( !is_array( $this->_images ) || empty( $this->_images ) ) {
             return false;
         }
 
@@ -192,6 +205,7 @@ final class IcoMaker
         $data .= $pixel_data;
         unset( $pixel_data );
 
+
         return $data;
     }
 
@@ -200,9 +214,10 @@ final class IcoMaker
      *
      * @access private
      */
-    function _add_image_data( $im ) : void {
+    private function _add_image_data( $im ) : void {
         $width  = imagesx( $im );
         $height = imagesy( $im );
+
 
         $pixel_data = [];
 
@@ -214,12 +229,14 @@ final class IcoMaker
                 $color = imagecolorat( $im, $x, $y );
 
                 $alpha = ( $color & 0x7F000000 ) >> 24;
-                $alpha = ( 1 - ( $alpha / 127 ) ) * 255;
+                //$alpha = ( 1 - ( $alpha / 127 ) ) * 255;
+                $alpha = round( ( 1 - ( $alpha / 127 ) ) * 255 );
 
                 $color &= 0xFFFFFF;
                 $color |= 0xFF000000 & ( $alpha << 24 );
 
                 $pixel_data[] = $color;
+
 
                 $opacity = ( $alpha <= 127 ) ? 1 : 0;
 
@@ -274,9 +291,9 @@ final class IcoMaker
      *
      * @access private
      */
-    function _load_image_file( $file ) {
+    private function _load_image_file( $file ) : GdImage | bool {
         // Run a cheap check to verify that it is an image file.
-        if ( false === ( getimagesize( $file ) ) ) {
+        if ( false === ( $size = getimagesize( $file ) ) ) {
             return false;
         }
 
@@ -289,6 +306,7 @@ final class IcoMaker
         }
 
         unset( $file_data );
+
 
         return $im;
     }
