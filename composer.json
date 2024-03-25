@@ -29,6 +29,7 @@
     "symfony/filesystem": "^7",
     "northrook/elements": "dev-main",
     "ext-fileinfo": "*",
+    "ext-gd": "*",
     "northrook/symfony-assets-bundle": "dev-main"
   },
   "require-dev": {
