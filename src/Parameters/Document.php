@@ -5,6 +5,7 @@ namespace Northrook\Symfony\Latte\Parameters;
 use Northrook\Elements\Element\Attributes;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
+use Northrook\Symfony\Latte\Parameters\Document\Favicon;
 use Northrook\Symfony\Latte\Parameters\Document\Meta;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -32,6 +33,7 @@ class Document
     protected array $meta = [];
 
     public readonly Attributes $body;
+    public readonly Favicon    $favicon;
 
     public function __construct(
         private readonly Application      $application,
@@ -39,6 +41,8 @@ class Document
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
     ) {
+
+        $this->favicon = new Favicon();
 
         $this->body = new Attributes(
             id          : $this->application->request->getPathInfo(),
@@ -77,18 +81,6 @@ class Document
         $this->meta[ $meta->name ] = $meta;
     }
 
-    public function favicon() : array {
-        return [
-            '<link rel="apple-touch-icon" sizes="180x180" href="/img/favicon/apple-touch-icon.png">',
-            '<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png">',
-            '<link rel="icon" type="image/png" sizes="16x16" href="/img/favicon/favicon-16x16.png">',
-            '<link rel="manifest" href="/img/favicon/site.webmanifest">',
-            '<link rel="mask-icon" href="/img/favicon/safari-pinned-tab.svg" color="#ff2d20">',
-            '<link rel="shortcut icon" href="/img/favicon/favicon.ico">',
-            '<meta name="msapplication-TileColor" content="#ff2d20">',
-            '<meta name="msapplication-config" content="/img/favicon/browserconfig.xml">',
-        ];
-    }
 
     public function meta( ...$get ) : array {
         $return = [];
