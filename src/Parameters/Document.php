@@ -5,12 +5,13 @@ namespace Northrook\Symfony\Latte\Parameters;
 use Northrook\Elements\Element\Attributes;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
-use Northrook\Symfony\Latte\Parameters\Type\Meta;
+use Northrook\Symfony\Latte\Parameters\Document\Meta;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /**
+ * @property string $robots
  * @property string $title
  * @property string $description
  * @property array  $scripts
