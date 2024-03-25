@@ -2,6 +2,9 @@
 
 namespace Northrook\Symfony\Latte\Parameters\Document;
 
+use Northrook\Symfony\Core\File;
+use Northrook\Symfony\Latte\Core\IcoMaker;
+
 class Favicon
 {
     public readonly array  $link;
@@ -9,6 +12,14 @@ class Favicon
     public readonly string $browserconfig;
 
     public function __construct() {
+
+        $ico = File::path( 'dir.public/assets/img/favicon/favicon.ico' );
+
+        if ( !$ico->exists ) {
+            $make = new IcoMaker( __DIR__ . 'icon.png', [ [ 256, 256 ], [ 64, 64 ] ] );
+            $make->save_ico( $ico->value );
+        }
+
         $this->tileColor     = '#ff2d20';
         $this->browserconfig = '/img/favicon/browserconfig.xml';
         $this->link          = [
@@ -30,27 +41,15 @@ class Favicon
                 'href'  => "/img/favicon/favicon-16x16.png",
             ],
             [
-                'rel'  => "manifest",
-                'href' => "/img/favicon/site.webmanifest",
-            ],
-            [
                 'rel'   => "mask-icon",
                 'href'  => "/img/favicon/safari-pinned-tab.svg",
                 'color' => "#ff2d20",
             ],
             [
                 'rel'  => "shortcut icon",
-                'href' => "/img/favicon/favicon.ico",
+                'href' => "/assets/img/favicon/favicon.ico",
             ],
-            [
-                'name'    => "msapplication-TileColor",
-                'content' => "#ff2d20",
-            ],
-            [
-                'name'    => "msapplication-config",
-                'content' => "/img/favicon/browserconfig.xml",
-            ],
-        ];;
+        ];
     }
 
 }
