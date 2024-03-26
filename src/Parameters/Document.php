@@ -6,6 +6,7 @@ use Northrook\Elements\Element\Attributes;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
 use Northrook\Symfony\Latte\Parameters\Document\Favicon;
+use Northrook\Symfony\Latte\Parameters\Document\Manifest;
 use Northrook\Symfony\Latte\Parameters\Document\Meta;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -33,16 +34,19 @@ class Document
     protected array $meta = [];
 
     public readonly Attributes $body;
-    public readonly Favicon    $favicon;
+    public readonly Manifest   $manifest;
 
     public function __construct(
         private readonly Application      $application,
         private readonly Content          $content,
+        public readonly Favicon           $favicon,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
     ) {
 
-        $this->favicon = new Favicon();
+        $this->manifest = new Manifest(
+            $this->application->sitename
+        );
 
         $this->body = new Attributes(
             id          : $this->application->request->getPathInfo(),

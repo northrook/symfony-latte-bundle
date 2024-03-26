@@ -10,6 +10,8 @@
 namespace Northrook\Symfony\Latte\Parameters;
 
 
+use Northrook\Logger\Log;
+use Northrook\Symfony\Core\File;
 use Northrook\Symfony\Latte\Parameters\Get\Theme;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -240,7 +242,9 @@ class Application
         return $this->getRequest()->attributes->get( '_route' );
     }
 
-
+    protected function getSitename() : string {
+        return 'Site Name';
+    }
 
 
     //----------------------------------------------------------------------------
@@ -271,6 +275,26 @@ class Application
     }
 
     // TODO: Update to support Url::type and Path::type
+
+    // public function asset( string $path ) : array {}
+
+    public function asset( string $public ) : ?string {
+        $public = ltrim( $public, '/' );
+        $asset  = File::path( 'dir.public' . $public );
+        if ( !$asset->exists ) {
+            Log::Error(
+                message : "Unable to resolve asset {name}. Returning {null}.",
+                context : [
+                              'name' => $public,
+                              'path' => $asset,
+                              'null' => null,
+                          ],
+            );
+            return null;
+        }
+
+        return '/' . $public;
+    }
 
     /**
      * {@see UrlGeneratorInterface::generate()}

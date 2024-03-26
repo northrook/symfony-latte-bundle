@@ -16,7 +16,7 @@ class Favicon
         $ico = File::path( 'dir.public/assets/img/favicon/favicon.ico' );
 
         if ( !$ico->exists ) {
-            $make = new IcoMaker( __DIR__ . 'icon.png', [ [ 256, 256 ], [ 64, 64 ] ] );
+            $make = new IcoMaker( __DIR__ . '/icon.png', [ [ 256, 256 ], [ 64, 64 ] ] );
             $make->save_ico( $ico->value );
         }
 

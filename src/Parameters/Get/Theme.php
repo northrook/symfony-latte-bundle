@@ -14,6 +14,10 @@ class Theme implements Stringable
     // private string $mode  = 'system';
     private string $hex = '#29b6fa';
 
+    // use the [attr=>value] syntax, add media as well
+    // <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+    // <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="black">
+
 
     public function __get( string $name ) {
         return match ( $name ) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Based on php-ico by Chris Jean
  *
@@ -10,23 +11,12 @@
 namespace Northrook\Symfony\Latte\Core;
 
 use GdImage;
+use Northrook\Logger\Log;
 use Northrook\Symfony\Core\File;
 
 
 class IcoMaker
 {
-    // private const REQUIRED_FUNCTIONS = [
-    //     'getimagesize',
-    //     'imagecreatefromstring',
-    //     'imagecreatetruecolor',
-    //     'imagecolortransparent',
-    //     'imagecolorallocatealpha',
-    //     'imagealphablending',
-    //     'imagesavealpha',
-    //     'imagesx',
-    //     'imagesy',
-    //     'imagecopyresampled',
-    // ];
 
     /**
      * Images in the BMP format.
@@ -49,16 +39,21 @@ class IcoMaker
      * @param array    $sizes  Optional. An array of sizes (each size is an array with a width and height) that the source image should be rendered at in the generated ICO file. If sizes are not supplied, the size of the source image will be used.
      */
     public function __construct( ?string $file = null, array $sizes = [] ) {
-        // foreach ( static::REQUIRED_FUNCTIONS as $function ) {
-        //     if ( !function_exists( $function ) ) {
-        //         trigger_error(
-        //             "The PHP_ICO class was unable to find the $function function, which is part of the GD library. Ensure that the system has the GD library installed and that PHP has access to it through a PHP interface, such as PHP's GD module. Since this function was not found, the library will be unable to create ICO files.",
-        //         );
-        //         return;
-        //     }
-        // }
 
         $this->preflight = class_exists( GdImage::class );
+
+        if ( !$this->preflight ) {
+            Log::Error(
+                "{class} is required to generate {ico} files.
+                Please install the GD PHP extension.
+                No file was generated.",
+                [
+                    'class' => 'GdImage',
+                    'ico'   => '.ico',
+                    'docs'  => 'https://www.php.net/manual/en/image.installation.php',
+                ],
+            );
+        }
 
         if ( $file ) {
             $this->add_image( $file, $sizes );
@@ -79,6 +74,7 @@ class IcoMaker
      * @return boolean true on success and false on failure.
      */
     public function add_image( string $file, array $sizes = [] ) : bool {
+
         if ( !$this->preflight ) {
             return false;
         }
