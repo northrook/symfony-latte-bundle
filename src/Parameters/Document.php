@@ -3,10 +3,10 @@
 namespace Northrook\Symfony\Latte\Parameters;
 
 use Northrook\Elements\Element\Attributes;
+use Northrook\Favicon\FaviconBundle;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
-use Northrook\Symfony\Latte\Parameters\Document\Favicon;
-use Northrook\Symfony\Latte\Parameters\Document\Manifest;
+use Northrook\Symfony\Core\File;
 use Northrook\Symfony\Latte\Parameters\Document\Meta;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -23,6 +23,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class Document
 {
 
+    private readonly string $publicDir;
 
     /** @var Script[] */
     protected array $script = [];
@@ -34,25 +35,23 @@ class Document
     protected array $meta = [];
 
     public readonly Attributes $body;
-    public readonly Manifest   $manifest;
+    public bool                $manifest = true;
 
     public function __construct(
         private readonly Application      $application,
         private readonly Content          $content,
-        public readonly Favicon           $favicon,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
     ) {
 
-        $this->manifest = new Manifest(
-            $this->application->sitename
-        );
+        $this->publicDir = File::path( 'dir.public' );
 
         $this->body = new Attributes(
             id          : $this->application->request->getPathInfo(),
             class       : 'test cass',
             data_strlen : strlen( $this->content->__toString() ),
         );
+
 
         foreach ( [
             'robots'      => $this->getRobots(),
@@ -85,8 +84,27 @@ class Document
         $this->meta[ $meta->name ] = $meta;
     }
 
+    public function favicon( ?string $dir = null ) : array {
 
-    public function meta( ...$get ) : array {
+        $links = FaviconBundle::links();
+
+        foreach ( $links as $key => $link ) {
+            if ( !file_exists(
+                implode(
+                    DIRECTORY_SEPARATOR, array_filter( [ $this->publicDir, $dir, $link, ], ),
+                ),
+            ) ) {
+                unset( $links[ $key ] );
+            }
+        }
+
+        return $links;
+    }
+    
+
+    public function meta(
+        ...$get
+    ) : array {
         $return = [];
 
         if ( count( $get ) === 1 ) {
@@ -123,35 +141,43 @@ class Document
         return $return;
     }
 
-    private function getMeta() : array {
+    private
+    function getMeta() : array {
         return $this->meta;
     }
 
-    private function getScripts() : array {
+    private
+    function getScripts() : array {
         return $this->script;
     }
 
-    private function getStylesheets() : array {
+    private
+    function getStylesheets() : array {
         return $this->stylesheet;
     }
 
-    private function getTitle() {
+    private
+    function getTitle() {
         return __METHOD__;
     }
 
-    private function getDescription() {
+    private
+    function getDescription() {
         return __METHOD__;
     }
 
-    private function getKeywords() {
+    private
+    function getKeywords() {
         return __METHOD__;
     }
 
-    private function getRobots() {
+    private
+    function getRobots() {
         return __METHOD__;
     }
 
-    private function getAuthor() {
+    private
+    function getAuthor() {
         return __METHOD__;
     }
 
@@ -166,7 +192,10 @@ class Document
      *
      * @return $this
      */
-    public function addStylesheet( string ...$styles ) : self {
+    public
+    function addStylesheet(
+        string ...$styles
+    ) : self {
         foreach ( $styles as $path ) {
             // $path                = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/styles/{$path}";
             // $this->stylesheets[] = Str::end( $path, '.css' );
@@ -175,7 +204,10 @@ class Document
         return $this;
     }
 
-    public function addScript( string ...$scripts ) : self {
+    public
+    function addScript(
+        string ...$scripts
+    ) : self {
         foreach ( $scripts as $path ) {
             // $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
             // $this->scripts[] = Str::end( $path, '.js' );
@@ -184,7 +216,10 @@ class Document
         return $this;
     }
 
-    public function addMeta( string $name, string $content ) : self {
+    public
+    function addMeta(
+        string $name, string $content,
+    ) : self {
         $meta                      = new Meta( $name, $content );
         $this->meta[ $meta->name ] = $meta;
         return $this;

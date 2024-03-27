@@ -75,21 +75,6 @@ return static function ( ContainerConfigurator $container ) : void {
               ->alias( Parameters\Content::class, 'latte.parameters.content' )
         //
         //
-        // ☕ - Favicon Generator
-              ->set( 'latte.document.favicon', Parameters\Document\Favicon::class )
-        //              ->args(
-        //                  [
-        //                      service( 'core.service.request' ),
-        //                      service( 'core.service.content' ),
-        //                      service( 'core.service.pathfinder' ),
-        //                      service( 'logger' )->nullOnInvalid(),
-        //                  ],
-        //              )
-              ->autowire()
-              ->public()
-              ->alias( Parameters\Document\Favicon::class, 'latte.document.favicon' )
-        //
-        //
         // ☕ - Document Parameters
               ->set( 'latte.parameters.document', Parameters\Document::class )
         //              ->args(

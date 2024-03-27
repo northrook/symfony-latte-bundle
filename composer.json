@@ -30,7 +30,8 @@
     "northrook/elements": "dev-main",
     "ext-fileinfo": "*",
     "ext-gd": "*",
-    "northrook/symfony-assets-bundle": "dev-main"
+    "northrook/symfony-assets-bundle": "dev-main",
+    "northrook/favicon": "dev-main"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
