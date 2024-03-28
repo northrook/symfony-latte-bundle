@@ -60,8 +60,8 @@ class Document
             'description' => $this->getDescription(),
             'keywords'    => $this->getKeywords(),
             'author'      => $this->getAuthor(),
-        ] as $name => $content ) {
-            $this->addMeta( $name, $content );
+        ] as $name => $value ) {
+            $this->addMeta( $name, $value );
         }
     }
 
@@ -73,7 +73,7 @@ class Document
 
         $name = "get" . ucfirst( $name );
         if ( method_exists( $this, $name ) ) {
-            return $this->$name() ?? null;
+            return $this->$name();
         }
 
         return null;
@@ -100,7 +100,7 @@ class Document
 
         return $links;
     }
-    
+
 
     public function meta(
         ...$get
