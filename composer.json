@@ -37,6 +37,8 @@
     "roave/security-advisories": "dev-latest",
     "symfony/framework-bundle": "^7.0",
     "symfony/web-profiler-bundle": "^7",
-    "symfony/stopwatch": "7"
+    "symfony/stopwatch": "7",
+    "symfony/security-bundle": "7.1.x-dev",
+    "symfony/translation": "7.1.x-dev"
   }
 }

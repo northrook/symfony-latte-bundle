@@ -1,9 +1,6 @@
 <?php
 
 /**
- * @noinspection PhpUnused
- * @noinspection PhpUndefinedNamespaceInspection
- * @noinspection PhpUndefinedClassInspection
  */
 
 
@@ -14,6 +11,7 @@ use Northrook\Logger\Log;
 use Northrook\Symfony\Core\File;
 use Northrook\Symfony\Latte\Parameters\Get\Theme;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
@@ -22,6 +20,10 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Translation\LocaleSwitcher;
 
 /**
  * Global parameters, accessed via {@see $get}
@@ -70,13 +72,27 @@ class Application
         private readonly ?LoggerInterface       $logger = null,
     ) {}
 
+    public function __isset( string $name ) : bool {
+        if ( method_exists( $this, "get" . ucfirst( $name ) ) ) {
+            return true;
+        }
+        return false;
+    }
+
     public function __get( string $name ) {
         $name = "get" . ucfirst( $name );
         if ( method_exists( $this, $name ) ) {
-            return $this->$name() ?? null;
+            return $this->$name();
         }
 
         return null;
+    }
+
+    public function __set( string $name, $value ) : void {
+        $this->logger->warning(
+            "Attempted to set {name} on {service}. This is not allowed. No property was set.",
+            [ 'name' => $name, 'service' => get_class( $this ), ],
+        );
     }
 
     protected function getTheme() : Theme {
@@ -131,11 +147,11 @@ class Application
      *
      * @return Request The current request
      * @version         1.1 ✅
-     * @uses            \Symfony\Component\HttpFoundation\RequestStack
+     * @uses            RequestStack
      */
     protected function getRequest() : Request {
-        return ( isset( $this->requestCache ) ) ? $this->requestCache
-            : $this->requestCache = $this->requestStack->getCurrentRequest() ?? new Request();
+        return $this->requestCache ?? ( $this->requestCache =
+            $this->requestStack->getCurrentRequest() ?? new Request() );
     }
 
     /** Returns the current session.
@@ -148,21 +164,18 @@ class Application
     }
 
     protected function getUserAgent() : UserAgent {
-        return ( isset( $this->userAgentCache ) ) ? $this->userAgentCache
-            : $this->userAgentCache = new UserAgent( $this->logger );
+        return $this->userAgentCache ?? ( $this->userAgentCache = new UserAgent( $this->logger ) );
     }
 
 
     protected function getEnv() : Env {
-        return ( isset( $this->envCache ) )
-            ? $this->envCache
-            : $this->envCache = new Env(
-                $this->debug,
-                (bool) $this->getUser(),
-                $this->environment === 'prod',
-                $this->environment === 'staging',
-                $this->environment === 'dev',
-            );
+        return $this->envCache ?? ( $this->envCache = new Env(
+            $this->debug,
+            (bool) $this->getUser(),
+            $this->environment === 'prod',
+            $this->environment === 'staging',
+            $this->environment === 'dev',
+        ) );
 
     }
 
@@ -188,11 +201,8 @@ class Application
             );
         }
 
-        if ( isset( $this->languageCache ) ) {
-            return $this->languageCache;
-        }
+        return $this->languageCache ?? ( $this->languageCache = $this->localeSwitcher?->getLocale() ?? $fallback );
 
-        return $this->languageCache = $this->localeSwitcher?->getLocale() ?? $fallback;
     }
 
     protected function getEnabledLocales() : array {
