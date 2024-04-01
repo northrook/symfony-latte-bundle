@@ -78,9 +78,10 @@ class Document
 
     public function __get( string $name ) {
 
-        if ( isset( $this->$name ) ) {
+
+        if ( isset( $this->meta[ $name ] ) ) {
             $this->printed[] = $name;
-            return $this->$name;
+            return $this->meta[ $name ];
         }
 
         $get = "get" . ucfirst( $name );
