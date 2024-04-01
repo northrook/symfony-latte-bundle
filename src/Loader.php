@@ -60,6 +60,8 @@ class Loader implements Latte\Loader
      */
     public static function prepare( string $content ) : string {
 
+        $content = preg_replace( '/\R.+<!--.+-->(?=\R\R)/', '', $content );
+
         return preg_replace_callback(
             "/\\\$[a-zA-Z?>._':$\s\-]*/m",
             function ( array $m ) {
@@ -118,11 +120,14 @@ class Loader implements Latte\Loader
             }
         }
 
-        return str_ireplace(
+
+        $content = str_ireplace(
             array_keys( self::NORMALIZE_VARIABLES ),
             array_values( self::NORMALIZE_VARIABLES ),
             $content,
         );
+
+        return preg_replace( [ '/\R(?=\R)/', '/\R(.+<!--)/' ], [ "", "\n\n$1" ], $content );
     }
 
 
@@ -301,7 +306,7 @@ class Loader implements Latte\Loader
         if ( $this->isStringLoader ) {
             if ( $this->templates === null ) {
                 throw new LogicException(
-                    "Missing template '$name'."
+                    "Missing template '$name'.",
                 );
             }
 

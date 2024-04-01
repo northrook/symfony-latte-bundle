@@ -2,8 +2,10 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
+use JetBrains\PhpStorm\ExpectedValues;
 use Northrook\Elements\Element\Attributes;
 use Northrook\Favicon\FaviconBundle;
+use Northrook\Support\Str;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
 use Northrook\Symfony\Core\File;
@@ -50,9 +52,8 @@ class Document
         $this->publicDir = File::path( 'dir.public' );
 
         $this->body = new Attributes(
-            id          : $this->application->request->getPathInfo(),
-            class       : 'test cass',
-            data_strlen : strlen( $this->content->__toString() ),
+            id    : $this->documentPath( 'key' ),
+            class : 'test cass',
         );
 
         $this->meta = [
@@ -95,7 +96,9 @@ class Document
         $this->meta[ $name ] = $value;
     }
 
-    public function __isset( string $name ) {}
+    public function __isset( string $name ) {
+        return isset( $this->meta[ $name ] );
+    }
 
 
     public function meta( ...$get ) : array {
@@ -131,10 +134,17 @@ class Document
                 }
             }
 
-            $meta[ $name ] = $value;
+            if ( $value === null ) {
+                continue;
+            }
+
+            $meta[ $name ] = [
+                'name'    => $name,
+                'content' => $value,
+            ];
         }
 
-        return array_filter( $meta );
+        return $meta;
     }
 
     private function getMeta() : array {
@@ -150,7 +160,13 @@ class Document
     }
 
     private function getTitle() : ?string {
-        return null;
+
+        $title = $this->meta[ 'title' ] ?? null;
+
+        // Fallback to path
+        $title ??= $this->documentPath( 'title' );
+
+        return $title;
     }
 
     private function getDescription() : ?string {
@@ -229,5 +245,17 @@ class Document
     ) : self {
         $this->meta[ $name ] = $content;
         return $this;
+    }
+
+    private function documentPath(
+        #[ExpectedValues( [ 'path', 'url', 'title', 'key' ] )]
+        string $as,
+    ) : ?string {
+        return match ( $as ) {
+            'path'  => $this->application->request->getPathInfo(),
+            'url'   => $this->application->request->getHost() . $this->application->request->getPathInfo(),
+            'title' => ucwords( trim( str_replace( '/', ' ', $this->application->request->getPathInfo() ) ) ),
+            'key'   => Str::key( $this->application->request->getPathInfo() ),
+        };
     }
 }

@@ -7,6 +7,7 @@ namespace Northrook\Symfony\Latte\Core;
 use Latte;
 use Latte\Runtime\Template;
 use Northrook\Symfony\Latte\Nodes\ClassNode;
+use Northrook\Symfony\Latte\Nodes\ElementNode;
 use Northrook\Symfony\Latte\Nodes\IdNode;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
@@ -33,8 +34,9 @@ final class Extension extends Latte\Extension
 
     public function getTags() : array {
         return [
-            'n:id'    => [ IdNode::class, 'create' ],
-            'n:class' => [ ClassNode::class, 'create' ],
+            'n:id'      => [ IdNode::class, 'create' ],
+            'n:class'   => [ ClassNode::class, 'create' ],
+            'n:element' => [ ElementNode::class, 'create' ],
             //			'n:href'  => [ HrefNode::class, 'create' ], // TODO: Implement
             //			'asset'   => [$this->asset, 'asset'],       // TODO: Should be part of n:href? Can we autocomplete assets (images)?
             //			'n:src'   => [$this->asset, 'asset'],       // TODO: Can we make this autocomplete, and in <img only?
