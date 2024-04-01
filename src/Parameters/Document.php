@@ -7,23 +7,25 @@ use Northrook\Favicon\FaviconBundle;
 use Northrook\Symfony\Assets\Script;
 use Northrook\Symfony\Assets\Stylesheet;
 use Northrook\Symfony\Core\File;
-use Northrook\Symfony\Latte\Parameters\Document\Meta;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /**
- * @property string $robots
- * @property string $title
- * @property string $description
- * @property array  $scripts
- * @property array  $stylesheets
- * @property array  $meta
+ * @property string  $robots
+ * @property string  $title
+ * @property string  $description
+ * @property array   $scripts
+ * @property array   $stylesheets
+ * @property array   $meta
+ * @property ?string $tileColor     = null;
+ * @property ?string $browserconfig = '/browserconfig.xml';
  */
 class Document
 {
 
     private readonly string $publicDir;
+    private array           $printed = [];
 
     /** @var Script[] */
     protected array $script = [];
@@ -31,11 +33,12 @@ class Document
     /** @var Stylesheet[] */
     protected array $stylesheet = [];
 
-    /** @var Meta[] */
     protected array $meta = [];
 
+
     public readonly Attributes $body;
-    public bool                $manifest = true;
+    public bool                $manifest      = true;
+    public bool                $msapplication = true;
 
     public function __construct(
         private readonly Application      $application,
@@ -52,133 +55,140 @@ class Document
             data_strlen : strlen( $this->content->__toString() ),
         );
 
+        $this->meta = [
+            // 'robots'  => $this->getRobots(),
+            // 'title'   => $this->getTitle(),
+            // 'content' => [
+            //     'description' => $this->getDescription(),
+            //     'keywords'    => $this->getKeywords(),
+            //     'author'      => $this->getAuthor(),
+            // ],
+            // // 'canonical'   => $this->getCanonical(),
+        ];
 
-        foreach ( [
-            'robots'      => $this->getRobots(),
-            // 'canonical'   => $this->getCanonical(),
-            'title'       => $this->getTitle(),
-            'description' => $this->getDescription(),
-            'keywords'    => $this->getKeywords(),
-            'author'      => $this->getAuthor(),
-        ] as $name => $value ) {
-            $this->addMeta( $name, $value );
-        }
+    }
+
+
+    public function unset( string $meta ) : self {
+        unset( $this->meta[ $meta ] );
+
+        return $this;
     }
 
     public function __get( string $name ) {
-        if ( isset( $this->meta[ $name ] ) ) {
-            return $this->meta[ $name ];
+
+        if ( isset( $this->$name ) ) {
+            $this->printed[] = $name;
+            return $this->$name;
         }
 
-
-        $name = "get" . ucfirst( $name );
-        if ( method_exists( $this, $name ) ) {
-            return $this->$name();
+        $get = "get" . ucfirst( $name );
+        if ( method_exists( $this, $get ) ) {
+            $this->printed[] = $name;
+            return $this->$get();
         }
 
         return null;
     }
 
     public function __set( string $name, mixed $value ) {
-        $meta                      = new Meta( $name, $value );
-        $this->meta[ $meta->name ] = $meta;
+        $this->meta[ $name ] = $value;
+    }
+
+    public function __isset( string $name ) {}
+
+
+    public function meta( ...$get ) : array {
+        $meta = [];
+        if ( count( $get ) === 1 ) {
+            $get = match ( $get[ 0 ] ) {
+                'all'           => array_keys( $this->meta ),
+                'info'          => [ 'title', 'description', 'keywords', 'robots', 'author' ],
+                'msapplication' => [ 'tileColor', 'browserconfig' ],
+                default         => $get,
+            };
+        }
+
+        foreach ( $get as $name ) {
+
+            if ( in_array( $name, $this->printed, true ) ) {
+                continue;
+            }
+
+            $this->printed[] = $name;
+            $value           = null;
+
+            if ( isset( $this->meta[ $name ] ) ) {
+                $value = $this->meta[ $name ];
+            }
+            elseif ( property_exists( $this, $name ) ) {
+                $value = $this->$name;
+            }
+            else {
+                $method = "get" . ucfirst( $name );
+                if ( method_exists( $this, $method ) ) {
+                    $value = $this->$method();
+                }
+            }
+
+            $meta[ $name ] = $value;
+        }
+
+        return array_filter( $meta );
+    }
+
+    private function getMeta() : array {
+        return $this->meta;
+    }
+
+    private function getScripts() : array {
+        return $this->script;
+    }
+
+    private function getStylesheets() : array {
+        return $this->stylesheet;
+    }
+
+    private function getTitle() : ?string {
+        return null;
+    }
+
+    private function getDescription() : ?string {
+        return null;
+    }
+
+    private function getKeywords() : ?string {
+        return null;
+    }
+
+    private function getRobots() : ?string {
+        return null;
+    }
+
+    private function getAuthor() : ?string {
+        return null;
+    }
+
+    private function getTileColor() : ?string {
+        return $this->msapplication ? $this->tileColor ?? $this->application->theme->color : null;
+    }
+
+    private function getBrowserconfig() : ?string {
+        return $this->msapplication ? '/' . ltrim( $this->browserconfig ?? 'browserconfig.xml', '/' ) : null;
     }
 
     public function favicon( ?string $dir = null ) : array {
 
         $links = FaviconBundle::links();
 
-        foreach ( $links as $key => $link ) {
-            if ( !file_exists(
-                implode(
-                    DIRECTORY_SEPARATOR, array_filter( [ $this->publicDir, $dir, $link, ], ),
-                ),
-            ) ) {
+        foreach ( FaviconBundle::links() as $key => $link ) {
+            $url = implode( DIRECTORY_SEPARATOR, array_filter( [ $this->publicDir, $dir, $link[ 'href' ] ] ), );
+            if ( !file_exists( $url ) ) {
                 unset( $links[ $key ] );
             }
         }
 
         return $links;
-    }
-
-
-    public function meta(
-        ...$get
-    ) : array {
-        $return = [];
-
-        if ( count( $get ) === 1 ) {
-            $get = match ( $get[ 0 ] ) {
-                'all'   => array_keys( $this->meta ),
-                'info'  => [ 'title', 'description', 'keywords', 'robots', 'author' ],
-                default => $get,
-            };
-        }
-
-        foreach ( $get as $name ) {
-
-            if ( !isset( $this->meta[ $name ] ) ) {
-                $this->logger->warning(
-                    "The {service} was requested on {route}, but was not available.",
-                    [
-                        'service'   => 'meta',
-                        'route'     => $this->application->request->getPathInfo(),
-                        'inventory' => $this->meta,
-                    ],
-                );
-                continue;
-            }
-
-            $meta = $this->meta[ $name ];
-
-            if ( true === $meta->printed ) {
-                continue;
-            }
-
-            $return += $meta->get();
-        }
-
-        return $return;
-    }
-
-    private
-    function getMeta() : array {
-        return $this->meta;
-    }
-
-    private
-    function getScripts() : array {
-        return $this->script;
-    }
-
-    private
-    function getStylesheets() : array {
-        return $this->stylesheet;
-    }
-
-    private
-    function getTitle() {
-        return __METHOD__;
-    }
-
-    private
-    function getDescription() {
-        return __METHOD__;
-    }
-
-    private
-    function getKeywords() {
-        return __METHOD__;
-    }
-
-    private
-    function getRobots() {
-        return __METHOD__;
-    }
-
-    private
-    function getAuthor() {
-        return __METHOD__;
     }
 
     /**
@@ -192,8 +202,7 @@ class Document
      *
      * @return $this
      */
-    public
-    function addStylesheet(
+    public function addStylesheet(
         string ...$styles
     ) : self {
         foreach ( $styles as $path ) {
@@ -204,8 +213,7 @@ class Document
         return $this;
     }
 
-    public
-    function addScript(
+    public function addScript(
         string ...$scripts
     ) : self {
         foreach ( $scripts as $path ) {
@@ -216,12 +224,10 @@ class Document
         return $this;
     }
 
-    public
-    function addMeta(
-        string $name, string $content,
+    public function addMeta(
+        string $name, mixed $content,
     ) : self {
-        $meta                      = new Meta( $name, $content );
-        $this->meta[ $meta->name ] = $meta;
+        $this->meta[ $name ] = $content;
         return $this;
     }
 }
