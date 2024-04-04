@@ -32,8 +32,6 @@ abstract class Preprocessor implements PreprocessorInterface
         return $this;
     }
 
-    abstract protected function construct() : void;
-
     /**
      * Load the content string to process.
      *
@@ -53,7 +51,7 @@ abstract class Preprocessor implements PreprocessorInterface
      * @return string
      */
     final public function getContent() : string {
-        $this->construct();
+        $this->process();
 
         $this->stopwatch->stop( $this::class );
         return $this->content;

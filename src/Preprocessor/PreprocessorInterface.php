@@ -28,6 +28,8 @@ interface PreprocessorInterface
         string $content,
     ) : self;
 
+    public function process() : self;
+
     /**
      * Return the processed content string to the {@see Latte\Loader}.
      *
