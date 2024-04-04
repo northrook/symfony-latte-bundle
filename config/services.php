@@ -59,6 +59,8 @@ return static function ( ContainerConfigurator $container ) : void {
                       ->nullOnInvalid(),
                       service( 'translation.locale_switcher' )  // LocaleSwitcher
                       ->nullOnInvalid(),
+                      service( 'security.csrf.token_generator' ) // CSRF Token Generator
+                      ->nullOnInvalid(),
                       service( 'logger' )                       // LoggerInterface
                       ->nullOnInvalid(),
                   ],

@@ -23,6 +23,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Translation\LocaleSwitcher;
 
 /**
@@ -63,13 +64,14 @@ class Application
     private readonly string $languageCache;
 
     public function __construct(
-        public readonly string                  $environment,
-        public readonly bool                    $debug,
-        private readonly RequestStack           $requestStack,
-        private readonly UrlGeneratorInterface  $urlGenerator,
-        private readonly ?TokenStorageInterface $tokenStorage = null,
-        private readonly ?LocaleSwitcher        $localeSwitcher = null,
-        private readonly ?LoggerInterface       $logger = null,
+        public readonly string                      $environment,
+        public readonly bool                        $debug,
+        private readonly RequestStack               $requestStack,
+        private readonly UrlGeneratorInterface      $urlGenerator,
+        private readonly ?TokenStorageInterface     $tokenStorage = null,
+        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
+        private readonly ?LocaleSwitcher            $localeSwitcher = null,
+        private readonly ?LoggerInterface           $logger = null,
     ) {}
 
     public function __isset( string $name ) : bool {
@@ -304,6 +306,10 @@ class Application
         }
 
         return '/' . $public;
+    }
+
+    public function csrf( string $token = 'authenticate' ) : ?string {
+        return $this->csrfTokenManager?->getToken( $token )->getValue();
     }
 
     /**
