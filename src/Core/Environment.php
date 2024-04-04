@@ -36,6 +36,18 @@ final class Environment
         $this->cacheDirectory = $this->parameterBag->get( 'dir.latte.cache' );
     }
 
+    public function setExtensions( Latte\Extension ...$extensions ) : self {
+        $this->extensions = $extensions;
+
+        return $this;
+    }
+
+    public function setPreprocessors( Preprocessor ...$preprocessors ) : self {
+        $this->preprocessors = $preprocessors;
+
+        return $this;
+    }
+
     /** Render '$template' to string
      *
      * * Accepts a path to a template file or a template string.
