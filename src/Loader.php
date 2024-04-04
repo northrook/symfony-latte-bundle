@@ -10,6 +10,7 @@ use Northrook\Symfony\Latte\Preprocessor\PreprocessorInterface;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
  *
@@ -47,6 +48,7 @@ final class Loader implements Latte\Loader
         private readonly array                 $extensions = [],
         array                                  $preprocessors = [],
         private readonly ?LoggerInterface      $logger = null,
+        private readonly ?Stopwatch            $stopwatch = null,
     ) {
         $this->preprocessors = $preprocessors;
     }

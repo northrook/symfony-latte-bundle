@@ -2,7 +2,6 @@
 
 namespace Northrook\Symfony\Latte\Preprocessor;
 
-use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -17,14 +16,20 @@ use Symfony\Component\Stopwatch\Stopwatch;
 abstract class Preprocessor implements PreprocessorInterface
 {
 
-    protected string $content;
+    protected string           $content;
+    protected ?LoggerInterface $logger    = null;
+    protected ?Stopwatch       $stopwatch = null;
 
-    #[EntryPoint]
-    final public function __construct(
-        protected ?LoggerInterface $logger = null,
-        protected ?Stopwatch       $stopwatch = null,
-    ) {
-        $this->stopwatch->start( $this::class, 'Preprocessor' );
+    public function setLogger( LoggerInterface $logger ) : self {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    public function setStopwatch( Stopwatch $stopwatch ) : self {
+        $this->stopwatch = $stopwatch;
+
+        return $this;
     }
 
     abstract protected function construct() : void;

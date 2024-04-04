@@ -107,6 +107,7 @@ final class Environment
                             $this->latte->getExtensions(),
                             $this->preprocessors,
                             $this->logger,
+                            $this->stopwatch,
                         ),
                     )
         ;
