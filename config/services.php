@@ -50,12 +50,6 @@ return static function ( ContainerConfigurator $container ) : void {
         //
         // 🧩️ - Latte Extension
               ->set( 'latte.core.preprocessor', Preprocessor::class )
-              ->args(
-                  [
-                      service( 'router' ),
-                      service( 'logger' )->nullOnInvalid(),
-                  ],
-              )
               ->alias( Preprocessor::class, 'latte.core.preprocessor' )
         //
         // ️📦️ - Global Parameters
