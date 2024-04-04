@@ -20,10 +20,6 @@ final class Environment
 
     private readonly string $cacheDirectory;
 
-    private ?Parameters\Content  $content  = null;
-    private ?Parameters\Document $document = null;
-
-
     /** @var Latte\Extension[] */
     private array $extensions = [];
 
@@ -38,14 +34,6 @@ final class Environment
         private readonly ?Stopwatch             $stopwatch = null,
     ) {
         $this->cacheDirectory = $this->parameterBag->get( 'dir.latte.cache' );
-    }
-
-    public function setDocument( Parameters\Document $document ) : void {
-        $this->document = $document;
-    }
-
-    public function setContent( Parameters\Content $content ) : void {
-        $this->content = $content;
     }
 
     /** Render '$template' to string

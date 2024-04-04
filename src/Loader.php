@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  *
  * @api Entry point
  */
-class Loader implements Latte\Loader
+final class Loader implements Latte\Loader
 {
     private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
 
@@ -36,6 +36,7 @@ class Loader implements Latte\Loader
     private array          $templateDirectories;
 
 
+    private string         $content;
     public readonly string $baseDir;
 
 
@@ -64,7 +65,7 @@ class Loader implements Latte\Loader
 
         return preg_replace_callback(
             "/\\\$[a-zA-Z?>._':$\s\-]*/m",
-            function ( array $m ) {
+            static function ( array $m ) {
                 return str_replace( '->', '%%ARROW%%', $m[ 0 ] );
             },
             $content,
@@ -72,6 +73,8 @@ class Loader implements Latte\Loader
     }
 
     /**
+     * # Exit Point
+     *
      * * Prepare and compile the template.
      * * The content is passed through each precompiler.
      *
@@ -198,6 +201,7 @@ class Loader implements Latte\Loader
 
     public function getContent( string $name ) : string {
 
+        // TODO : This is where we broke stringLoader rendering of latte templates
         if ( $this->isStringLoader ) {
 
             if ( is_array( $this->templates ) ) {
@@ -229,44 +233,18 @@ class Loader implements Latte\Loader
         }
         else {
 
-//            $file = File::path( Loader::TEMPLATE_DIR_PARAMETER . "/$name" );
-//
-//            if ( !$file->exists ) {
-//                foreach ( File::pathfinder()->getParameters() as $parameter => $path ) {
-//                    if ( str_contains( Loader::TEMPLATE_DIR_PARAMETER, $parameter ) ) {
-//                        dump( $parameter, $name );
-//                        $file = File::path( $parameter . "/$name" );
-//
-//                        if ( $file->exists )  {
-//                            break;
-//                        }
-//                    }
-//                }
-//
-//                $file = new Path(
-//                    File::parameterDirname(
-//                        '../../../symfony-core-bundle/templates/_document.latte',
-//                    )
-//                );
-//            }
-
-
             $file = $this->getTemplatePath( $name );
 
-
-            if ( !$file->exists ) {
+            if ( !$file || !$file?->exists ) {
                 throw new Latte\RuntimeException( "Missing template file '$file'." );
             }
-            else {
-                if ( $this->isExpired( $name, time() ) ) {
-                    if ( @touch( $file->value ) === false ) {
-                        trigger_error(
-                            "File's modification time is in the future. Cannot update it: "
-                            . error_get_last()[ 'message' ],
-                            E_USER_WARNING,
-                        );
-                    }
-                }
+
+            if ( $this->isExpired( $name, time() ) && @touch( $file->value ) === false ) {
+                trigger_error(
+                    "File's modification time is in the future. Cannot update it: "
+                    . error_get_last()[ 'message' ],
+                    E_USER_WARNING,
+                );
             }
             $content = file_get_contents( $file->value );
         }

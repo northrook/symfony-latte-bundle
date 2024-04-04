@@ -23,46 +23,67 @@ abstract class Preprocessor implements PreprocessorInterface
     final public function __construct(
         protected ?LoggerInterface $logger = null,
         protected ?Stopwatch       $stopwatch = null,
-    ) {}
+    ) {
+        $this->stopwatch->start( $this::class, 'Preprocessor' );
+    }
 
     abstract protected function construct() : void;
 
-    final public function load( string $content ) : void {
+    /**
+     * Load the content string to process.
+     *
+     * @param string  $content
+     *
+     * @return $this
+     */
+    final public function load( string $content ) : self {
         $this->content = $content;
+
+        return $this;
     }
 
+    /**
+     * Retrieve the processed content string.
+     *
+     * @return string
+     */
     final public function getContent() : string {
         $this->construct();
 
+        $this->stopwatch->stop( $this::class );
         return $this->content;
     }
 
+    /**
+     * Update the content string for this iteration.
+     *
+     * @param string  $match
+     * @param string  $update
+     *
+     * @return void
+     */
     final protected function updateContent( string $match, string $update ) : void {
         $this->content = str_ireplace( $match, $update, $this->content );
     }
 
-    protected function prepareContent(
+    final protected function prepareContent(
         bool $minify = false,
         bool $preserveComments = false,
         bool $preserveExcessWhitespaces = false,
     ) : void {
 
-
         // Remove Latte comments
-        // TODO: Remove all comments?
         if ( !$preserveComments ) {
             $this->content = preg_replace(
-                        '/{\*.*?\*}/ms',
-                        '',
-                        $this->content,
-                count : $count,
+                '/{\*.*?\*}/ms',
+                '',
+                $this->content,
             );
-            $this->logger->info( 'Removed {count} Latte comments', [ 'count' => $count ] );
         }
 
         $this->content = preg_replace_callback(
             '/{(.*?)}/ms',
-            function ( array $m ) {
+            static function ( array $m ) {
                 $var = trim( $m[ 1 ] );
                 if ( !str_contains( $var, '$' ) || Str::startsWith( $var, [ 'layout', 'block', 'var' ] ) ) {
                     return '{' . $var . '}';

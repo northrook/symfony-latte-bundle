@@ -5,6 +5,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Northrook\Symfony\Latte\Core;
 use Northrook\Symfony\Latte\Parameters;
+use Northrook\Symfony\Latte\Preprocessor\Preprocessor;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -46,6 +47,16 @@ return static function ( ContainerConfigurator $container ) : void {
                   ],
               )
               ->alias( Core\Extension::class, 'latte.core.extension' )
+        //
+        // 🧩️ - Latte Extension
+              ->set( 'latte.core.preprocessor', Preprocessor::class )
+              ->args(
+                  [
+                      service( 'router' ),
+                      service( 'logger' )->nullOnInvalid(),
+                  ],
+              )
+              ->alias( Preprocessor::class, 'latte.core.preprocessor' )
         //
         // ️📦️ - Global Parameters
               ->set( 'latte.parameters.application', Parameters\Application::class )

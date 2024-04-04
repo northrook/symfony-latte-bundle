@@ -26,7 +26,7 @@ interface PreprocessorInterface
      */
     public function load(
         string $content,
-    ) : void;
+    ) : self;
 
     /**
      * Return the processed content string to the {@see Latte\Loader}.
