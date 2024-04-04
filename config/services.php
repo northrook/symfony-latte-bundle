@@ -27,15 +27,17 @@ return static function ( ContainerConfigurator $container ) : void {
         //
         // ☕ - Latte Environment
               ->set( 'latte.environment', Core\Environment::class )
-              ->args(
+              ->property(
+                  'dependencyInjection',
                   [
                       service( 'parameter_bag' ),
-                      service( 'latte.core.extension' ),
                       service( 'latte.parameters.application' ),
                       service( 'logger' )->nullOnInvalid(),
                       service( 'debug.stopwatch' )->nullOnInvalid(),
                   ],
               )
+              ->property( 'addExtension', service( 'latte.core.extension' ) )
+              ->autowire()
               ->alias( Core\Environment::class, 'latte.environment' )
         //
         // 🧩️ - Latte Extension
