@@ -26,7 +26,7 @@ return static function ( ContainerConfigurator $container ) : void {
         //
         // ☕ - Latte Environment
               ->set( 'latte.environment', Core\Environment::class )
-              ->property(
+              ->call(
                   'dependencyInjection',
                   [
                       service( 'parameter_bag' ),
@@ -35,7 +35,7 @@ return static function ( ContainerConfigurator $container ) : void {
                       service( 'debug.stopwatch' )->nullOnInvalid(),
                   ],
               )
-              ->property( 'addExtension', [ service( 'latte.core.extension' ) ] )
+              ->call( 'addExtension', [ service( 'latte.core.extension' ) ] )
               ->autowire()
               ->alias( Core\Environment::class, 'latte.environment' )
         //
