@@ -70,7 +70,7 @@ abstract class Preprocessor implements PreprocessorInterface
         bool $minify = false,
         bool $preserveComments = false,
         bool $preserveExcessWhitespaces = false,
-    ) : void {
+    ) : Preprocessor {
 
         // Remove Latte comments
         if ( !$preserveComments ) {
@@ -121,5 +121,6 @@ abstract class Preprocessor implements PreprocessorInterface
             $this->content = Str::squish( $this->content );
         }
 
+        return $this;
     }
 }
