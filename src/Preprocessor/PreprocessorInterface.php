@@ -3,6 +3,8 @@
 namespace Northrook\Symfony\Latte\Preprocessor;
 
 use Latte;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
  * Latte Preprocessor Interface.
@@ -17,18 +19,24 @@ use Latte;
  */
 interface PreprocessorInterface
 {
+
+    public function setProfiler(
+        ?LoggerInterface $logger,
+        ?Stopwatch       $stopwatch,
+    ) : PreprocessorInterface;
+
     /**
      * Load the content string to process.
      *
      * @param string  $content
      *
-     * @return void
+     * @return PreprocessorInterface
      */
     public function load(
         string $content,
-    ) : self;
+    ) : PreprocessorInterface;
 
-    public function process() : self;
+    public function process() : PreprocessorInterface;
 
     /**
      * Return the processed content string to the {@see Latte\Loader}.

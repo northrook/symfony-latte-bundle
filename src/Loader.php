@@ -101,9 +101,12 @@ final class Loader implements Latte\Loader
 
             Timer::start( 'preprocessor' );
 
-            $compiler->load( $content );
-
-            $content = $compiler->getContent();
+            $content = $compiler->setProfiler(
+                $this->logger,
+                $this->stopwatch,
+            )
+                                ->load( $content )
+                                ->getContent();
 
             $time = Timer::get( 'preprocessor' );
 
@@ -182,9 +185,9 @@ final class Loader implements Latte\Loader
 
                     // TODO: Improve auto-null to allow for filters (check from $ to pipe)
                     if ( str_contains( $value, '$' ) ) {
-                        if ( !str_contains( $value, '??' ) ) {
-                            $value .= '??false';
-                        }
+                        // if ( !str_contains( $value, '??' ) ) {
+                        //     $value .= '??false';
+                        // }
                     }
                     else {
                         $value = "'$value'";

@@ -20,17 +20,14 @@ abstract class Preprocessor implements PreprocessorInterface
     protected ?LoggerInterface $logger    = null;
     protected ?Stopwatch       $stopwatch = null;
 
-    public function setLogger( LoggerInterface $logger ) : self {
-        $this->logger = $logger;
+    public function setProfiler( ?LoggerInterface $logger, ?Stopwatch $stopwatch, ) : PreprocessorInterface {
 
-        return $this;
-    }
-
-    public function setStopwatch( Stopwatch $stopwatch ) : self {
+        $this->logger    = $logger;
         $this->stopwatch = $stopwatch;
 
         return $this;
     }
+
 
     /**
      * Load the content string to process.
@@ -92,14 +89,15 @@ abstract class Preprocessor implements PreprocessorInterface
                     return '{' . $var . '}';
                 }
 
-                if ( !str_contains( $var, '??' ) ) {
-                    $test = $var;
-//					print_r($test);
-                    $var = '{' . $var .= '??false}';
-                    // dump( $m,$var );
-
-                    return $var;
-                }
+                // TODO: Improve auto-null to allow for filters (check from $ to pipe)
+//                 if ( !str_contains( $var, '??' ) ) {
+//                     $test = $var;
+// //					print_r($test);
+//                     $var = '{' . $var .= '??false}';
+//                     // dump( $m,$var );
+//
+//                     return $var;
+//                 }
 
                 $var = '{' . $var . '}';
 
@@ -124,5 +122,4 @@ abstract class Preprocessor implements PreprocessorInterface
         }
 
     }
-
 }
