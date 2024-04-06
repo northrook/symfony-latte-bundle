@@ -140,7 +140,15 @@ class Environment
 
         $this->stopwatch?->start( 'engine', 'latte' );
 
-        $this->latte = new ( $engine::class ?? Latte\Engine::class )( ...$args );
+        if ( !$engine ) {
+            $this->latte = new Latte\Engine();
+        }
+        else {
+            $this->latte = ( $engine )( ...$args );
+        }
+
+
+        // $this->latte = new ( $engine ?? Latte\Engine::class )( ...$args );
 
         foreach ( $this->extensions as $extension ) {
             $this->latte->addExtension( $extension );
@@ -156,8 +164,7 @@ class Environment
                             $this->logger,
                             $this->stopwatch,
                         ),
-                    )
-        ;
+                    );
 
         return $this->latte;
     }
