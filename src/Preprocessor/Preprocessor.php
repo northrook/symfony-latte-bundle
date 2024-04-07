@@ -37,6 +37,7 @@ abstract class Preprocessor implements PreprocessorInterface
      * @return $this
      */
     final public function load( string $content ) : self {
+        $this->stopwatch->start( $this::class, 'Preprocessor' );
         $this->content = $content;
 
         return $this;
