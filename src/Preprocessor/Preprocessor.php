@@ -76,7 +76,7 @@ abstract class Preprocessor implements PreprocessorInterface
         // Remove Latte comments
         if ( !$preserveComments ) {
             $this->content = preg_replace(
-                '/{\*.*?\*}/ms',
+                [ '/{\*.*?\*}/ms', '/xmlns:\w.*?=".*?"/ms' ],
                 '',
                 $this->content,
             );
@@ -124,4 +124,4 @@ abstract class Preprocessor implements PreprocessorInterface
 
         return $this;
     }
-}
+}å

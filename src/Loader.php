@@ -33,8 +33,8 @@ final class Loader implements Latte\Loader
     private bool $isStringLoader = false;
 
     /** @var PreprocessorInterface[] */
-    private readonly array $preprocessors;
-    private array          $templateDirectories;
+    private array $preprocessors;
+    private array $templateDirectories;
 
 
     private string         $content;
@@ -85,11 +85,12 @@ final class Loader implements Latte\Loader
      * @return string
      */
     private function compile( string $content ) : string {
+        $debug = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
 
         $content = $this->latteTags( $content );
         $content = $this::prepare( $content );
 
-        foreach ( $this->preprocessors as $compiler ) {
+        foreach ( $this->preprocessors as $index => $compiler ) {
 
             if ( !$compiler instanceof PreprocessorInterface ) {
                 $this->logger?->emergency(
@@ -110,6 +111,8 @@ final class Loader implements Latte\Loader
 
             $time = Timer::get( 'preprocessor' );
 
+            unset ( $this->preprocessors[ $index ] );
+
             $slow = match ( true ) {
                 $time >= 55 => 'error',
                 $time >= 35 => 'warning',
@@ -126,6 +129,7 @@ final class Loader implements Latte\Loader
                     ],
                 );
             }
+
         }
 
 
