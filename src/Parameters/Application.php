@@ -37,12 +37,11 @@ use Symfony\Component\Translation\LocaleSwitcher;
  * * Exposes the same Symfony parameters and services as Twig's `app.variable`
  * * Intended to be extended with custom parameters and services
  *
- * @version 1.0 ✅
+ * @version 1.1 ✅
  *
  * @property Env               $env
  * @property UserAgent         $userAgent
  * @property bool              $debug
- * @property string            $locale
  * @property array             $enabledLocales
  * @property array             $flashes
  *
@@ -51,6 +50,7 @@ use Symfony\Component\Translation\LocaleSwitcher;
  * @property string            $language
  * @property Theme             $theme
  * @property ?Request          $request
+ * @property string            $routeInfo
  * @property ?UserInterface    $user
  * @property ?SessionInterface $session
  *  */
@@ -62,6 +62,7 @@ class Application
     private UserAgent $userAgentCache;
 
     private readonly string $languageCache;
+    private readonly string $routeInfoCache;
 
     public function __construct(
         public readonly string                  $environment,
@@ -82,12 +83,20 @@ class Application
     }
 
     public function __get( string $name ) {
-        $name = "get" . ucfirst( $name );
-        if ( method_exists( $this, $name ) ) {
-            return $this->$name();
-        }
 
-        return null;
+        return match ( $name ) {
+            'env'       => $this->getEnv(),
+            'userAgent' => $this->getUserAgent(),
+            'debug'     => $this->debug,
+            'language'  => $this->locale(),
+            'request'   => $this->getRequest(),
+            'routeInfo' => $this->getRouteInfo(),
+            'user'      => $this->getUser(),
+            'session'   => $this->getSession(),
+            'flashes'   => $this->getFlashes(),
+            'theme'     => $this->getTheme(),
+            default     => null
+        };
     }
 
     public function __set( string $name, $value ) : void {
@@ -156,6 +165,11 @@ class Application
             $this->requestStack->getCurrentRequest() ?? new Request() );
     }
 
+    protected function getRouteInfo() : string {
+        return $this->routeInfoCache ?? ( $this->routeInfoCache =
+            str_replace( [ '_', ':' ], '-', $this->requestStack->getCurrentRequest()->attributes->get( '_route' ) ) );
+    }
+
     /** Returns the current session.
      */
     protected function getSession() : ?SessionInterface {
@@ -181,15 +195,11 @@ class Application
 
     }
 
-    public function language( ?string $fallback = null ) : string {
-        return $this->getLocale( $fallback );
-    }
-
     protected function getLanguage() : string {
-        return $this->getLocale();
+        return $this->locale();
     }
 
-    protected function getLocale( ?string $fallback = null ) : string {
+    public function locale( ?string $fallback = null ) : string {
 
         $fallback ??= 'en';
 

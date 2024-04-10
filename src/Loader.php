@@ -5,6 +5,7 @@ namespace Northrook\Symfony\Latte;
 use Latte;
 use LogicException;
 use Northrook\Logger\Timer;
+use Northrook\Support\Arr;
 use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Symfony\Latte\Preprocessor\PreprocessorInterface;
 use Northrook\Types\Path;
@@ -87,8 +88,10 @@ final class Loader implements Latte\Loader
     private function compile( string $content ) : string {
         $debug = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
 
+
         $content = $this->latteTags( $content );
         $content = $this::prepare( $content );
+        // dd( $content);
 
         foreach ( $this->preprocessors as $index => $compiler ) {
 
@@ -185,17 +188,19 @@ final class Loader implements Latte\Loader
             $content = preg_replace_callback(
                 "/$tag=\"(.*?)\"/ms",
                 function ( array $match ) use ( $tag ) {
-                    $value = trim( $match[ 1 ], " {}'" );
+
+                    $value = trim( $match[ 1 ], " {}" );
+                    // dump($match);
 
                     // TODO: Improve auto-null to allow for filters (check from $ to pipe)
-                    if ( str_contains( $value, '$' ) ) {
-                        // if ( !str_contains( $value, '??' ) ) {
-                        //     $value .= '??false';
-                        // }
-                    }
-                    else {
-                        $value = "'$value'";
-                    }
+                    // if ( str_contains( $value, '$' ) ) {
+                    //     // if ( !str_contains( $value, '??' ) ) {
+                    //     //     $value .= '??false';
+                    //     // }
+                    // }
+                    // else {
+                    //     $value = "'$value'";
+                    // }
 
                     return "$tag=\"$value\"";
                 },
@@ -203,6 +208,8 @@ final class Loader implements Latte\Loader
             );
 
         }
+
+        // dump( $content);
 
         return $content;
     }
@@ -327,7 +334,14 @@ final class Loader implements Latte\Loader
         /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
         /// That way we can have a default template, like _document.latte
 
-        return $this->getTemplatePath( $name )->value;
+
+        $template = $this->getTemplatePath( $name );
+
+        if ( !$template ) {
+            throw new Latte\RuntimeException( "Missing template '$name'." );
+        }
+
+        return $template->value;
 
     }
 
@@ -345,12 +359,15 @@ final class Loader implements Latte\Loader
     private function getTemplatePath( ?string $name = null ) : ?Path {
 
         // Retrieve all parameters registered as Latte directories
-        $this->templateDirectories ??= array_filter(
-            array    : $this->parameterBag->all(),
-            callback : static fn ( $value, $key ) => is_string( $value ) && str_contains( $key, 'dir.latte' ),
-            mode     : ARRAY_FILTER_USE_BOTH,
+        $this->templateDirectories ??= Arr::unique(
+            array_filter(
+                array    : $this->parameterBag->all(),
+                callback : static fn ( $value, $key ) => is_string( $value ) && str_starts_with(
+                        $key, 'dir',
+                    ) && str_contains( $key, 'templates' ),
+                mode     : ARRAY_FILTER_USE_BOTH,
+            ),
         );
-
         // Check if the Application has the requested template
         $path = ( $this->templateDirectories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
 
@@ -361,8 +378,7 @@ final class Loader implements Latte\Loader
 
         // Else, loop through registered template directories until one is found
         foreach ( $this->templateDirectories as $parameter => $path ) {
-            if ( str_contains( $parameter, Loader::TEMPLATE_DIR_PARAMETER )
-                 && file_exists( $path . $name ) ) {
+            if ( file_exists( $path . $name ) ) {
                 return new Path( $path . $name );
             }
         }

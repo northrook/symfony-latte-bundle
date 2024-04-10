@@ -53,7 +53,7 @@ class Document
 
         $this->body = new Attributes(
             id    : $this->documentPath( 'key' ),
-            class : 'test cass',
+            class : $this->application->routeInfo,
         );
 
         $this->meta = [
@@ -125,13 +125,15 @@ class Document
             if ( isset( $this->meta[ $name ] ) ) {
                 $value = $this->meta[ $name ];
             }
-            elseif ( property_exists( $this, $name ) ) {
-                $value = $this->$name;
-            }
             else {
-                $method = "get" . ucfirst( $name );
-                if ( method_exists( $this, $method ) ) {
-                    $value = $this->$method();
+                if ( property_exists( $this, $name ) ) {
+                    $value = $this->$name;
+                }
+                else {
+                    $method = "get" . ucfirst( $name );
+                    if ( method_exists( $this, $method ) ) {
+                        $value = $this->$method();
+                    }
                 }
             }
 
