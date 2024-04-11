@@ -65,6 +65,8 @@ final class Loader implements Latte\Loader
     public static function prepare( string $content ) : string {
 
         $content = preg_replace( '/\R.+<!--.+-->(?=\R\R)/', '', $content );
+        
+        $content = str_replace( "\n>", '>', $content );
 
         return preg_replace_callback(
             "/\\\$[a-zA-Z?>._':$\s\-]*/m",
