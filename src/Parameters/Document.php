@@ -2,107 +2,114 @@
 
 namespace Northrook\Symfony\Latte\Parameters;
 
-use JetBrains\PhpStorm\ExpectedValues;
-use Northrook\Elements\Element\Attributes;
 use Northrook\Favicon\FaviconBundle;
-use Northrook\Support\Str;
-use Northrook\Symfony\Assets\Script;
-use Northrook\Symfony\Assets\Stylesheet;
 use Northrook\Symfony\Core\File;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 
 /**
- * @property string  $robots
- * @property string  $title
- * @property string  $description
- * @property array   $scripts
- * @property array   $stylesheets
- * @property array   $meta
- * @property ?string $tileColor     = null;
- * @property ?string $browserconfig = '/browserconfig.xml';
+ * @property-read ?string $title
+ * @property-read ?string $description
+ * @property-read ?string $author
+ * @property-read ?string $keywords
+ * @property-read array   $robots
+ * @property-read array   $content
+ * @property-read array   $stylesheets
+ * @property-read array   $scripts
+ * @property-read array   $bodyAttributes
  */
-class Document
+final class Document
 {
 
-    private readonly string $publicDir;
-    private array           $printed = [];
+    private const CONTENT_META = [ 'title' => null, 'description' => null, 'author' => null, 'keywords' => null ];
 
-    /** @var Script[] */
-    protected array $script = [];
+    private array $printed = [];
 
-    /** @var Stylesheet[] */
-    protected array $stylesheet = [];
+    private array $meta = [
+        'content' => self::CONTENT_META,
+    ];
 
-    protected array $meta = [];
-
-
-    public readonly Attributes $body;
-    public bool                $manifest      = true;
-    public bool                $msapplication = true;
 
     public function __construct(
-        private readonly Application      $application,
-        private readonly Content          $content,
-        private readonly ?LoggerInterface $logger = null,
-        private readonly ?Stopwatch       $stopwatch = null,
+        array                  $meta,
+        private readonly array $stylesheets,
+        private readonly array $scripts,
+        private readonly array $documentBodyAttributes,
+        public bool            $manifest = true,
+        public bool            $msApplication = true,
     ) {
-
-        $this->publicDir = File::path( 'dir.public' );
-
-        $this->body = new Attributes(
-            id    : $this->documentPath( 'key' ),
-            class : $this->application->routeInfo,
-        );
-
-        $this->meta = [
-            // 'robots'  => $this->getRobots(),
-            // 'title'   => $this->getTitle(),
-            // 'content' => [
-            //     'description' => $this->getDescription(),
-            //     'keywords'    => $this->getKeywords(),
-            //     'author'      => $this->getAuthor(),
-            // ],
-            // // 'canonical'   => $this->getCanonical(),
-        ];
-
+        $this->assignDocumentMeta( $meta );
     }
 
+    private function assignDocumentMeta( ?array $meta = null ) : void {
 
-    public function unset( string $meta ) : self {
-        unset( $this->meta[ $meta ] );
+        $meta = array_merge( Document::CONTENT_META, $meta );
 
-        return $this;
-    }
-
-    public function __get( string $name ) {
-
-
-        if ( isset( $this->meta[ $name ] ) ) {
-            $this->printed[] = $name;
-            return $this->meta[ $name ];
+        foreach ( $meta as $name => $value ) {
+            if ( array_key_exists( $name, Document::CONTENT_META ) ) {
+                $this->meta[ 'content' ][ $name ] = $value;
+            }
+            else {
+                $this->meta[ $name ] = $value;
+            }
         }
 
-        $get = "get" . ucfirst( $name );
-        if ( method_exists( $this, $get ) ) {
-            $this->printed[] = $name;
-            return $this->$get();
+    }
+
+    public function meta( ?string $get = null ) : array {
+        $meta         = [];
+        $documentMeta = $get ? $this->meta[ $get ] ?? [] : $this->meta;
+
+        foreach ( $documentMeta as $name => $content ) {
+
+            if ( $this->printed( $name ) ) {
+                continue;
+            }
+
+            if ( is_array( $content ) ) {
+                foreach ( $this->metaGroup( $content ) as $value ) {
+                    $meta[] = $value;
+                }
+            }
+            if ( is_string( $content ) ) {
+                $meta[] = $this->metaValue( $name, $content );
+            }
+
+
         }
 
-        return null;
+        return $meta;
     }
 
-    public function __set( string $name, mixed $value ) {
-        $this->meta[ $name ] = $value;
+    private function metaValue(
+        string                $name,
+        null | string | array $content = null,
+    ) : ?array {
+
+        $content ??= $this->meta[ $name ] ?? null;
+
+        if ( is_array( $content ) ) {
+            $content = $this->metaGroup( $content );
+        }
+        else {
+            $content = [ 'name' => $name, 'content' => $content ];
+        }
+
+        $this->printed[ $name ] = $content;
+
+        return $content[ 'content' ] ?? null ? $content : [];
     }
 
-    public function __isset( string $name ) {
-        return isset( $this->meta[ $name ] );
+    private function metaGroup( array $value ) : array {
+
+        $meta = [];
+        foreach ( $value as $name => $content ) {
+            $meta[] = $this->metaValue( $name, $content );
+        }
+
+        return $meta;
     }
 
-
-    public function meta( ...$get ) : array {
+    public function metaOld( ...$get ) : array {
         $meta = [];
         if ( count( $get ) === 1 ) {
             $get = match ( $get[ 0 ] ) {
@@ -150,43 +157,71 @@ class Document
         return $meta;
     }
 
-    private function getMeta() : array {
-        return $this->meta;
+    public function unset( string $meta ) : self {
+        unset( $this->meta[ $meta ] );
+
+        return $this;
     }
 
-    private function getScripts() : array {
-        return $this->script;
+    private function assets( string $type ) : array {
+
+
+        if ( !property_exists( $this, $type ) ) {
+            return [];
+        }
+
+        $assets = [];
+
+        foreach ( $this->{$type} as $index => $asset ) {
+            foreach ( $asset as $key => $value ) {
+                if ( $value instanceof \Stringable ) {
+                    $this->{$type}[ $index ][ $key ] = (string) $value;
+                }
+                if ( is_bool( $value ) ) {
+                    // $this->{$type}[ $index ][ $key ] = $value ? true : 'false';
+                }
+            }
+        }
+
+        return $this->{$type};
     }
 
-    private function getStylesheets() : array {
-        return $this->stylesheet;
+    public function __get( string $name ) {
+
+        if ( array_key_exists( $name, $this->printed ) ) {
+            return null;
+        }
+
+        if ( array_key_exists( $name, $this::CONTENT_META ) && ( $this->meta[ 'content' ] ?? null ) ) {
+            return $this->metaValue( $name, $this->meta[ 'content' ][ $name ] )[ 'content' ] ?? null;
+        }
+
+        return match ( $name ) {
+            'content'                => $this->meta( 'content' ),
+            'robots'                 => $this->meta( 'robots' ),
+            'bodyAttributes'         => $this->documentBodyAttributes,
+            'stylesheets', 'scripts' => $this->assets( $name ),
+            default                  => null
+        };
     }
 
-    private function getTitle() : ?string {
-
-        $title = $this->meta[ 'title' ] ?? null;
-
-        // Fallback to path
-        $title ??= $this->documentPath( 'title' );
-
-        return $title;
+    public function __set( string $name, mixed $value ) {
+        return;
     }
 
-    private function getDescription() : ?string {
-        return null;
+    private function printed( string $name ) : bool {
+
+        return array_key_exists( $name, $this->printed );
+
+        // $this->printed[ $name ] = $value;
+        // dump( $name, $value );
+        // return $value;
     }
 
-    private function getKeywords() : ?string {
-        return null;
+    public function __isset( string $name ) {
+        return isset( $this->$name );
     }
 
-    private function getRobots() : ?string {
-        return null;
-    }
-
-    private function getAuthor() : ?string {
-        return null;
-    }
 
     private function getTileColor() : ?string {
         return $this->msapplication ? $this->tileColor ?? $this->application->theme->color : null;
@@ -201,64 +236,15 @@ class Document
         $links = FaviconBundle::links();
 
         foreach ( FaviconBundle::links() as $key => $link ) {
-            $url = implode( DIRECTORY_SEPARATOR, array_filter( [ $this->publicDir, $dir, $link[ 'href' ] ] ), );
+            $url =
+                implode( DIRECTORY_SEPARATOR, array_filter( [ File::path( 'dir.public' ), $dir, $link[ 'href' ] ] ), );
             if ( !file_exists( $url ) ) {
                 unset( $links[ $key ] );
             }
         }
 
+        // var_dump($links);
+
         return $links;
-    }
-
-    /**
-     *
-     * * Provide a path to a stylesheet in `App/assets/styles/`.
-     * * If provided with just a filename, will assume `App/assets/styles/`
-     * * Or direct path to a stylesheet.
-     * * If the stylesheet is not public, it will be copied to `App/public/assets/styles/`.
-     *
-     * @param string  ...$styles  as 'assets/styles/style.css'
-     *
-     * @return $this
-     */
-    public function addStylesheet(
-        string ...$styles
-    ) : self {
-        foreach ( $styles as $path ) {
-            // $path                = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/styles/{$path}";
-            // $this->stylesheets[] = Str::end( $path, '.css' );
-            $this->stylesheet[] = new Stylesheet( $path );
-        }
-        return $this;
-    }
-
-    public function addScript(
-        string ...$scripts
-    ) : self {
-        foreach ( $scripts as $path ) {
-            // $path            = Str::contains( $path, [ '/', '\\' ] ) ? $path : "assets/scripts/{$path}";
-            // $this->scripts[] = Str::end( $path, '.js' );
-            $this->script[] = new Script( $path );
-        }
-        return $this;
-    }
-
-    public function addMeta(
-        string $name, mixed $content,
-    ) : self {
-        $this->meta[ $name ] = $content;
-        return $this;
-    }
-
-    private function documentPath(
-        #[ExpectedValues( [ 'path', 'url', 'title', 'key' ] )]
-        string $as,
-    ) : ?string {
-        return match ( $as ) {
-            'path'  => $this->application->request->getPathInfo(),
-            'url'   => $this->application->request->getHost() . $this->application->request->getPathInfo(),
-            'title' => ucwords( trim( str_replace( '/', ' ', $this->application->request->getPathInfo() ) ) ),
-            'key'   => Str::key( $this->application->request->getPathInfo() ),
-        };
     }
 }

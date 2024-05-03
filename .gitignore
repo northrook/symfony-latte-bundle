@@ -7,7 +7,15 @@
 # Composer
 /vendor/
 /composer.phar
-composer.lock
 
 # Build data
+.env
+*.lock
+/public/
+/var/
 /build/
+/*.php
+
+# Node
+/node_modules/
+package-lock.json

@@ -1,11 +1,6 @@
 <?php
 
-/**
- */
-
-
 namespace Northrook\Symfony\Latte\Parameters;
-
 
 use Northrook\Logger\Log;
 use Northrook\Symfony\Core\File;
@@ -56,12 +51,12 @@ use Symfony\Component\Translation\LocaleSwitcher;
  *  */
 class Application
 {
+    private array $parameterCache = [];
 
     private Request   $requestCache;
     private Env       $envCache;
     private UserAgent $userAgentCache;
 
-    private readonly string $languageCache;
     private readonly string $routeInfoCache;
 
     public function __construct(
@@ -203,6 +198,10 @@ class Application
 
         $fallback ??= 'en';
 
+        if ( isset( $this->parameterCache[ 'locale' ] ) ) {
+            return $this->parameterCache[ 'locale' ];
+        }
+
         if ( !$this->localeSwitcher ) {
             $this?->logger->warning(
                 "The {service} was requested on {route}, but was not available.", [
@@ -213,7 +212,7 @@ class Application
             );
         }
 
-        return $this->languageCache ?? ( $this->languageCache = $this->localeSwitcher?->getLocale() ?? $fallback );
+        return $this->parameterCache[ 'locale' ] = $this->localeSwitcher?->getLocale() ?? $fallback;
 
     }
 

@@ -8,18 +8,16 @@ use Northrook\Symfony\Latte\Parameters;
 
 return static function ( ContainerConfigurator $container ) : void {
 
-    $fromRoot = function ( string $set = '' ) : string {
-        return '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
-                str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
-            ) . DIRECTORY_SEPARATOR;
-    };
+    $fromRoot = static fn ( string $set = '' ) => '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
+            str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
+        ) . DIRECTORY_SEPARATOR;
+    
 
     // Parameters
     $container->parameters()
               ->set( 'latte.parameter_key.application', 'get' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
-              ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) )
-    ;
+              ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
 
     // Services
     $container->services()
@@ -69,28 +67,5 @@ return static function ( ContainerConfigurator $container ) : void {
               )
               ->autowire()
               ->public()
-              ->alias( Parameters\Application::class, 'latte.parameters.application' )
-        //
-        //
-        // ☕ - Document Parameters
-              ->set( 'latte.parameters.content', Parameters\Content::class )
-              ->autowire()
-              ->public()
-              ->alias( Parameters\Content::class, 'latte.parameters.content' )
-        //
-        //
-        // ☕ - Document Parameters
-              ->set( 'latte.parameters.document', Parameters\Document::class )
-        //              ->args(
-        //                  [
-        //                      service( 'core.service.request' ),
-        //                      service( 'core.service.content' ),
-        //                      service( 'core.service.pathfinder' ),
-        //                      service( 'logger' )->nullOnInvalid(),
-        //                  ],
-        //              )
-              ->autowire()
-              ->public()
-              ->alias( Parameters\Document::class, 'latte.parameters.document' )
-    ;
+              ->alias( Parameters\Application::class, 'latte.parameters.application' );
 };
