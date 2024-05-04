@@ -1,10 +1,15 @@
 <?php
 
-namespace Northrook\Symfony\Latte\Parameters;
+namespace Northrook\Symfony\Latte;
 
+use Closure;
+use JetBrains\PhpStorm\Deprecated;
+use Northrook\Core\Service\ServiceResolver;
 use Northrook\Logger\Log;
 use Northrook\Symfony\Core\File;
-use Northrook\Symfony\Latte\Parameters\Get\Theme;
+use Northrook\Symfony\Latte\Parameters\Env;
+use Northrook\Symfony\Latte\Parameters\Theme;
+use Northrook\Symfony\Latte\Parameters\UserAgent;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +23,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Translation\LocaleSwitcher;
 
 /**
@@ -49,7 +54,7 @@ use Symfony\Component\Translation\LocaleSwitcher;
  * @property ?UserInterface    $user
  * @property ?SessionInterface $session
  *  */
-class Application
+class GlobalVariable extends ServiceResolver
 {
     private array $parameterCache = [];
 
@@ -60,14 +65,14 @@ class Application
     private readonly string $routeInfoCache;
 
     public function __construct(
-        public readonly string                  $environment,
-        public readonly bool                    $debug,
-        private readonly RequestStack           $requestStack,
-        private readonly UrlGeneratorInterface  $urlGenerator,
-        private readonly ?TokenStorageInterface $tokenStorage = null,
-        private readonly ?LocaleSwitcher        $localeSwitcher = null,
-        private readonly ?UriSafeTokenGenerator $csrfTokenManager = null,
-        private readonly ?LoggerInterface       $logger = null,
+        public readonly string              $environment,
+        public readonly bool                $debug,
+        RequestStack | Closure              $requestStack,
+        UrlGeneratorInterface | Closure     $urlGenerator,
+        TokenStorageInterface | Closure     $tokenStorage,
+        LocaleSwitcher | Closure            $localeSwitcher,
+        CsrfTokenManagerInterface | Closure $csrfTokenManager,
+        LoggerInterface | Closure           $logger,
     ) {}
 
     public function __isset( string $name ) : bool {
@@ -95,7 +100,7 @@ class Application
     }
 
     public function __set( string $name, $value ) : void {
-        $this->logger->warning(
+        $this->getMappedService( 'logger' )?->warning(
             "Attempted to set {name} on {service}. This is not allowed. No property was set.",
             [ 'name' => $name, 'service' => get_class( $this ), ],
         );
@@ -111,8 +116,11 @@ class Application
      */
     protected function getToken() : ?TokenInterface {
 
-        if ( !$this->tokenStorage ) {
-            $this?->logger->warning(
+        /** @var ?TokenStorageInterface $tokenStorage */
+        $tokenStorage = $this->getMappedService( 'tokenStorage' );
+
+        if ( !$tokenStorage ) {
+            Log::warning(
                 "The {service} was requested on {route}, but was not available.", [
                 'service'       => 'tokenStorage',
                 'route'         => $this->getRequest()->getPathInfo(),
@@ -122,7 +130,7 @@ class Application
             );
         }
 
-        return $this->tokenStorage->getToken();
+        return $tokenStorage?->getToken();
     }
 
     /**
@@ -130,9 +138,15 @@ class Application
      *
      * @see TokenInterface::getUser()
      */
+    #[Deprecated]
     protected function getUser() : ?UserInterface {
 
-        if ( !$this->tokenStorage ) {
+        trigger_error( 'Deprecated', E_USER_ERROR );
+
+
+        /** @var ?TokenStorageInterface $tokenStorage */
+        $tokenStorage = $this->getMappedService( 'tokenStorage' );
+        if ( !$tokenStorage ) {
             $this?->logger->warning(
                 "The {service} was requested on {route}, but was not available.", [
                 'service'       => 'tokenStorage',
@@ -143,7 +157,7 @@ class Application
             );
         }
 
-        return $this->tokenStorage->getToken()?->getUser();
+        return $tokenStorage?->getToken()?->getUser();
     }
 
     /** Return the current request if it exists, else a new request.
@@ -157,12 +171,12 @@ class Application
      */
     protected function getRequest() : Request {
         return $this->requestCache ?? ( $this->requestCache =
-            $this->requestStack->getCurrentRequest() ?? new Request() );
+            $this->getMappedService( 'requestStack' )?->getCurrentRequest() ?? new Request() );
     }
 
     protected function getRouteInfo() : string {
         return $this->routeInfoCache ?? ( $this->routeInfoCache =
-            str_replace( [ '_', ':' ], '-', $this->requestStack->getCurrentRequest()->attributes->get( '_route' ) ) );
+            str_replace( [ '_', ':' ], '-', $this->getRequest()->attributes->get( '_route' ) ) );
     }
 
     /** Returns the current session.
@@ -175,7 +189,8 @@ class Application
     }
 
     protected function getUserAgent() : UserAgent {
-        return $this->userAgentCache ?? ( $this->userAgentCache = new UserAgent( $this->logger ) );
+        return $this->userAgentCache ?? ( $this->userAgentCache =
+            new UserAgent( $this->getMappedService( 'logger' ) ) );
     }
 
 
@@ -202,8 +217,10 @@ class Application
             return $this->parameterCache[ 'locale' ];
         }
 
-        if ( !$this->localeSwitcher ) {
-            $this?->logger->warning(
+        $localeSwitcher = $this->getMappedService( 'localeSwitcher' );
+
+        if ( !$localeSwitcher ) {
+            $this->getMappedService( 'logger' )?->warning(
                 "The {service} was requested on {route}, but was not available.", [
                 'service'  => 'localeSwitcher',
                 'fallback' => $fallback,
@@ -292,7 +309,9 @@ class Application
     // TODO: Update to support Url::type and Path::type
     public function url( string $route ) : string {
 
-        return $this->urlGenerator->generate( $route );
+        $urlGenerator = $this->getMappedService( 'urlGenerator' );
+
+        return $this->getMappedService( 'urlGenerator' )?->generate( $route );
     }
 
     // TODO: Update to support Url::type and Path::type
@@ -317,7 +336,9 @@ class Application
         return '/' . $public;
     }
 
+    #[Deprecated]
     public function csrf( string $token = 'authenticate' ) : ?string {
+        return 'deprecated';
         return $this->csrfTokenManager?->getToken( $token )->getValue();
     }
 
@@ -330,7 +351,9 @@ class Application
      *
      * @return string
      */
+    #[Deprecated]
     public function path( string $route, array $parameters = [], bool $absoluteUrl = false ) : string {
+        return 'deprecated';
         try {
             return $this->urlGenerator->generate(
                 name          : $route,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Northrook\Symfony\Latte\Parameters;
+namespace Northrook\Symfony\Latte;
 
 use Northrook\Favicon\FaviconBundle;
 use Northrook\Symfony\Core\File;
@@ -17,7 +17,7 @@ use Northrook\Symfony\Core\File;
  * @property-read array   $scripts
  * @property-read array   $bodyAttributes
  */
-final class Document
+final class DocumentVariable
 {
 
     private const CONTENT_META = [ 'title' => null, 'description' => null, 'author' => null, 'keywords' => null ];
@@ -42,10 +42,10 @@ final class Document
 
     private function assignDocumentMeta( ?array $meta = null ) : void {
 
-        $meta = array_merge( Document::CONTENT_META, $meta );
+        $meta = array_merge( DocumentVariable::CONTENT_META, $meta );
 
         foreach ( $meta as $name => $value ) {
-            if ( array_key_exists( $name, Document::CONTENT_META ) ) {
+            if ( array_key_exists( $name, DocumentVariable::CONTENT_META ) ) {
                 $this->meta[ 'content' ][ $name ] = $value;
             }
             else {

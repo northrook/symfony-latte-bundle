@@ -17,6 +17,7 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=8.2",
+    "northrook/core": "dev-main",
     "northrook/logger": "dev-main",
     "latte/latte": "^3.0",
     "symfony/config": "^7.0",

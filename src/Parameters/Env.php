@@ -7,7 +7,7 @@ namespace Northrook\Symfony\Latte\Parameters;
  * @version 1.0 ✅
  * @author  Martin Nielsen <mn@northrook.com>
  */
-final class Env
+final readonly class Env
 {
     public function __construct(
         public bool $debug,

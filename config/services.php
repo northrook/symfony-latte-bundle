@@ -4,20 +4,42 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 
 use Northrook\Symfony\Latte\Core;
-use Northrook\Symfony\Latte\Parameters;
+use Northrook\Symfony\Latte\GlobalVariable;
 
 return static function ( ContainerConfigurator $container ) : void {
+
+    $services = $container->services();
 
     $fromRoot = static fn ( string $set = '' ) => '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
             str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
         ) . DIRECTORY_SEPARATOR;
-    
+
 
     // Parameters
     $container->parameters()
               ->set( 'latte.parameter_key.application', 'get' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
+
+    //--------------------------------------------------------------------
+    // Global Variable
+    //--------------------------------------------------------------------
+    $services->set( 'latte.parameters.global', GlobalVariable::class )
+             ->args(
+                 [
+                     param( 'kernel.environment' ),               // Environment<string>
+                     param( 'kernel.debug' ),                     // Debug<bool>
+                     service_closure( 'request_stack' ),               // RequestStack
+                     service_closure( 'router' ),
+                     service_closure( 'security.token_storage' )->nullOnInvalid(),
+                     service_closure( 'translation.locale_switcher' )->nullOnInvalid(),
+                     service_closure( 'security.csrf.token_generator' )->nullOnInvalid(),
+                     service_closure( 'logger' )->nullOnInvalid(),
+                 ],
+             )
+             ->autowire()
+             ->public()
+             ->alias( GlobalVariable::class, 'latte.parameters.global' );
 
     // Services
     $container->services()
@@ -28,7 +50,7 @@ return static function ( ContainerConfigurator $container ) : void {
                   'dependencyInjection',
                   [
                       service( 'parameter_bag' ),
-                      service( 'latte.parameters.application' ),
+                      service( 'ApplicationParameters' ),
                       service( 'logger' )->nullOnInvalid(),
                       service( 'debug.stopwatch' )->nullOnInvalid(),
                   ],
@@ -48,7 +70,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->alias( Core\Extension::class, 'latte.core.extension' )
         //
         // ️📦️ - Global Parameters
-              ->set( 'latte.parameters.application', Parameters\Application::class )
+              ->set( 'latte.parameters.application', GlobalVariable::class )
               ->args(
                   [
                       param( 'kernel.environment' ),               // Environment<string>
@@ -67,5 +89,5 @@ return static function ( ContainerConfigurator $container ) : void {
               )
               ->autowire()
               ->public()
-              ->alias( Parameters\Application::class, 'latte.parameters.application' );
+              ->alias( GlobalVariable::class, 'latte.parameters.application' );
 };

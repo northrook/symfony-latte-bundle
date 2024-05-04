@@ -55,8 +55,7 @@ final class Loader implements Latte\Loader
     }
 
     /**
-     * * TODO: [mid] Improve the regex pattern for matching {$variable_Names->values}
-     *                  Case-sensitivity, special characters like underscore etc.
+     * TODO: Improve the regex pattern for matching `{$variable_Names->values`}, case-sensitivity, special characters like underscore etc.
      *
      * @param string  $content
      *

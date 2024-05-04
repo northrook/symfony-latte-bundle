@@ -25,17 +25,17 @@ class Environment
     /** @var Preprocessor[] */
     private array $preprocessors = [];
 
-    private readonly ParameterBagInterface  $parameterBag;
-    private readonly Parameters\Application $application;
-    private readonly ?LoggerInterface       $logger;
-    private readonly ?Stopwatch             $stopwatch;
+    private readonly ParameterBagInterface            $parameterBag;
+    private readonly Parameters\ApplicationParameters $application;
+    private readonly ?LoggerInterface                 $logger;
+    private readonly ?Stopwatch                       $stopwatch;
 
 
     final public function dependencyInjection(
-        ParameterBagInterface  $parameterBag,
-        Parameters\Application $application,
-        ?LoggerInterface       $logger = null,
-        ?Stopwatch             $stopwatch = null,
+        ParameterBagInterface            $parameterBag,
+        Parameters\ApplicationParameters $application,
+        ?LoggerInterface                 $logger = null,
+        ?Stopwatch                       $stopwatch = null,
     ) : void {
         $this->parameterBag   = $parameterBag;
         $this->application    = $application;
