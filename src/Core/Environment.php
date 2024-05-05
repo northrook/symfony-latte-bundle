@@ -3,9 +3,10 @@ declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Core;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte;
+use Northrook\Symfony\Latte\GlobalVariable;
 use Northrook\Symfony\Latte\Loader;
-use Northrook\Symfony\Latte\Parameters as Parameters;
 use Northrook\Symfony\Latte\Preprocessor\Preprocessor;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -13,6 +14,7 @@ use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+#[Deprecated( 'Use Northrook\Symfony\Latte\Environment instead.', \Northrook\Symfony\Latte\Environment::class )]
 class Environment
 {
     private ?Latte\Engine $latte = null;
@@ -25,17 +27,17 @@ class Environment
     /** @var Preprocessor[] */
     private array $preprocessors = [];
 
-    private readonly ParameterBagInterface            $parameterBag;
-    private readonly Parameters\ApplicationParameters $application;
-    private readonly ?LoggerInterface                 $logger;
-    private readonly ?Stopwatch                       $stopwatch;
+    private readonly ParameterBagInterface $parameterBag;
+    private readonly GlobalVariable        $application;
+    private readonly ?LoggerInterface      $logger;
+    private readonly ?Stopwatch            $stopwatch;
 
 
     final public function dependencyInjection(
-        ParameterBagInterface            $parameterBag,
-        Parameters\ApplicationParameters $application,
-        ?LoggerInterface                 $logger = null,
-        ?Stopwatch                       $stopwatch = null,
+        ParameterBagInterface $parameterBag,
+        GlobalVariable        $application,
+        ?LoggerInterface      $logger = null,
+        ?Stopwatch            $stopwatch = null,
     ) : void {
         $this->parameterBag   = $parameterBag;
         $this->application    = $application;

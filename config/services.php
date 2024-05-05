@@ -3,8 +3,11 @@
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 
-use Northrook\Symfony\Latte\Core;
-use Northrook\Symfony\Latte\GlobalVariable;
+use Northrook\Core\Cache;
+use Northrook\Symfony\Latte\Environment;
+use Northrook\Symfony\Latte\Extension\CoreExtension;
+use Northrook\Symfony\Latte\Variables\Application;
+use Northrook\Symfony\Latte\Variables\Application\ApplicationDependencies;
 
 return static function ( ContainerConfigurator $container ) : void {
 
@@ -17,18 +20,44 @@ return static function ( ContainerConfigurator $container ) : void {
 
     // Parameters
     $container->parameters()
-              ->set( 'latte.parameter_key.application', 'get' )
+              ->set( 'latte.parameter_key.global', 'get' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
+    //--------------------------------------------------------------------
+    // Latte Environment
+    //--------------------------------------------------------------------
+
+    $services->set( 'latte.extension.core', CoreExtension::class )
+             ->args(
+                 [
+                     service( 'router' ),
+                     service( 'logger' )->nullOnInvalid(),
+                 ],
+             );
+
+    $services->set( 'latte.environment', Environment::class )
+             ->args(
+                 [
+                     param( 'dir.latte.cache' ),
+                     param( 'latte.parameter_key.global' ),
+                     service_closure( 'latte.parameters.application' ),
+                     service_closure( 'latte.extension.core' ),
+                     service_closure( 'parameter_bag' ),
+                     service_closure( 'logger' )->nullOnInvalid(),
+                     service_closure( 'debug.stopwatch' )->nullOnInvalid(),
+                 ],
+             )
+        // ->autowire()
+        // ->alias( Environment::class, 'latte.environment' )
+    ;
 
     //--------------------------------------------------------------------
     // Global Variable
     //--------------------------------------------------------------------
-    $services->set( 'latte.parameters.global', GlobalVariable::class )
+
+    $services->set( 'latte.parameters.dependencies', ApplicationDependencies::class )
              ->args(
                  [
-                     param( 'kernel.environment' ),               // Environment<string>
-                     param( 'kernel.debug' ),                     // Debug<bool>
                      service_closure( 'request_stack' ),               // RequestStack
                      service_closure( 'router' ),
                      service_closure( 'security.token_storage' )->nullOnInvalid(),
@@ -36,58 +65,15 @@ return static function ( ContainerConfigurator $container ) : void {
                      service_closure( 'security.csrf.token_generator' )->nullOnInvalid(),
                      service_closure( 'logger' )->nullOnInvalid(),
                  ],
-             )
-             ->autowire()
-             ->public()
-             ->alias( GlobalVariable::class, 'latte.parameters.global' );
+             );
 
-    // Services
-    $container->services()
-        //
-        // ☕ - Latte Environment
-              ->set( 'latte.environment', Core\Environment::class )
-              ->call(
-                  'dependencyInjection',
-                  [
-                      service( 'parameter_bag' ),
-                      service( 'ApplicationParameters' ),
-                      service( 'logger' )->nullOnInvalid(),
-                      service( 'debug.stopwatch' )->nullOnInvalid(),
-                  ],
-              )
-              ->call( 'addExtension', [ service( 'latte.core.extension' ) ] )
-              ->autowire()
-              ->alias( Core\Environment::class, 'latte.environment' )
-        //
-        // 🧩️ - Latte Extension
-              ->set( 'latte.core.extension', Core\Extension::class )
-              ->args(
-                  [
-                      service( 'router' ),
-                      service( 'logger' )->nullOnInvalid(),
-                  ],
-              )
-              ->alias( Core\Extension::class, 'latte.core.extension' )
-        //
-        // ️📦️ - Global Parameters
-              ->set( 'latte.parameters.application', GlobalVariable::class )
-              ->args(
-                  [
-                      param( 'kernel.environment' ),               // Environment<string>
-                      param( 'kernel.debug' ),                     // Debug<bool>
-                      service( 'request_stack' ),               // RequestStack
-                      service( 'router' ),                      // UrlGeneratorInterface
-                      service( 'security.token_storage' )       // TokenStorageInterface
-                      ->nullOnInvalid(),
-                      service( 'translation.locale_switcher' )  // LocaleSwitcher
-                      ->nullOnInvalid(),
-                      service( 'security.csrf.token_generator' ) // CSRF Token Generator
-                      ->nullOnInvalid(),
-                      service( 'logger' )                       // LoggerInterface
-                      ->nullOnInvalid(),
-                  ],
-              )
-              ->autowire()
-              ->public()
-              ->alias( GlobalVariable::class, 'latte.parameters.application' );
+    $services->set( 'latte.parameters.application', Application::class )
+             ->args(
+                 [
+                     param( 'kernel.environment' ),               // Environment<string>
+                     param( 'kernel.debug' ),                     // Debug<bool>
+                     inline_service( Cache::class ),
+                     service( 'latte.parameters.dependencies' ),
+                 ],
+             );
 };

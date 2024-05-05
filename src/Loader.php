@@ -3,14 +3,13 @@
 namespace Northrook\Symfony\Latte;
 
 use Latte;
-use LogicException;
+use Latte\Extension;
+use Northrook\Logger\Log;
 use Northrook\Logger\Timer;
-use Northrook\Support\Arr;
 use Northrook\Support\Attributes\EntryPoint;
 use Northrook\Symfony\Latte\Preprocessor\PreprocessorInterface;
 use Northrook\Types\Path;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /** Load templates from .latte files, preloaded templates, or raw string.
@@ -33,26 +32,26 @@ final class Loader implements Latte\Loader
 
     private bool $isStringLoader = false;
 
-    /** @var PreprocessorInterface[] */
-    private array $preprocessors;
-    private array $templateDirectories;
-
 
     private string         $content;
     public readonly string $baseDir;
 
 
+    /**
+     * @param array                    $templateDirs
+     * @param Extension[]              $extensions
+     * @param PreprocessorInterface[]  $preprocessors
+     * @param ?LoggerInterface         $logger
+     * @param ?Stopwatch               $stopwatch
+     */
     public function __construct(
-        private readonly ParameterBagInterface $parameterBag,
-        // Key-value array of name and template markup.
-        public readonly ?array                 $templates = null,
-        private readonly array                 $extensions = [],
-        array                                  $preprocessors = [],
-        private readonly ?LoggerInterface      $logger = null,
-        private readonly ?Stopwatch            $stopwatch = null,
-    ) {
-        $this->preprocessors = $preprocessors;
-    }
+        private readonly array            $templateDirs,
+        // public readonly ?array            $templates = null,
+        private readonly array            $extensions = [],
+        private readonly array            $preprocessors = [],
+        private readonly ?LoggerInterface $logger = null,
+        private readonly ?Stopwatch       $stopwatch = null,
+    ) {}
 
     /**
      * TODO: Improve the regex pattern for matching `{$variable_Names->values`}, case-sensitivity, special characters like underscore etc.
@@ -136,8 +135,8 @@ final class Loader implements Latte\Loader
 
 
         $content = str_ireplace(
-            array_keys( self::NORMALIZE_VARIABLES ),
-            array_values( self::NORMALIZE_VARIABLES ),
+            array_keys( Loader::NORMALIZE_VARIABLES ),
+            array_values( Loader::NORMALIZE_VARIABLES ),
             $content,
         );
 
@@ -213,37 +212,44 @@ final class Loader implements Latte\Loader
         return $content;
     }
 
-
+    /**
+     * Entry point for the template loader.
+     *
+     * @param string  $name
+     *
+     * @return string
+     */
     public function getContent( string $name ) : string {
 
         // TODO : This is where we broke stringLoader rendering of latte templates
         if ( $this->isStringLoader ) {
 
-            if ( is_array( $this->templates ) ) {
-
-                $content = $this->templates[ $name ] ?? '';
-
-                if ( !$content ) {
-                    if ( $this->logger ) {
-                        $this->logger->error(
-                            'Missing requested template {name}.', [
-                            'name'      => $name,
-                            'templates' => $this->templates,
-                            'backtrace' => debug_backtrace(
-                                DEBUG_BACKTRACE_IGNORE_ARGS, 3,
-                            ),
-                        ],
-                        );
-                    }
-                    else {
-                        throw new Latte\RuntimeException( "Missing template '$name'." );
-                    }
-                }
-
-            }
-            else {
-                $content = $name;
-            }
+            $content = 'This is a string loader';
+            // if ( is_array( $this->templates ) ) {
+            //
+            //     $content = $this->templates[ $name ] ?? '';
+            //
+            //     if ( !$content ) {
+            //         if ( $this->logger ) {
+            //             $this->logger->error(
+            //                 'Missing requested template {name}.', [
+            //                 'name'      => $name,
+            //                 'templates' => $this->templates,
+            //                 'backtrace' => debug_backtrace(
+            //                     DEBUG_BACKTRACE_IGNORE_ARGS, 3,
+            //                 ),
+            //             ],
+            //             );
+            //         }
+            //         else {
+            //             throw new Latte\RuntimeException( "Missing template '$name'." );
+            //         }
+            //     }
+            //
+            // }
+            // else {
+            //     $content = $name;
+            // }
 
         }
         else {
@@ -254,11 +260,10 @@ final class Loader implements Latte\Loader
                 throw new Latte\RuntimeException( "Missing template file '$file'." );
             }
 
-            if ( $this->isExpired( $name, time() ) && @touch( $file->value ) === false ) {
-                trigger_error(
-                    "File's modification time is in the future. Cannot update it: "
-                    . error_get_last()[ 'message' ],
-                    E_USER_WARNING,
+            if ( !@touch( $file->value ) && $this->isExpired( $name, time() ) ) {
+                Log::error(
+                    "File {filename} modification time is in the future. Cannot update it: {error}",
+                    [ 'filename' => $file->value, 'error' => error_get_last()[ 'message' ] ],
                 );
             }
             $content = file_get_contents( $file->value );
@@ -297,11 +302,11 @@ final class Loader implements Latte\Loader
     public function getReferredName( string $name, string $referringName ) : string {
 
         if ( $this->isStringLoader ) {
-            if ( $this->templates === null ) {
-                throw new LogicException(
-                    "Missing template '$name'.",
-                );
-            }
+            // if ( $this->templates === null ) {
+            //     throw new LogicException(
+            //         "Missing template '$name'.",
+            //     );
+            // }
 
             return $name;
         }
@@ -357,18 +362,8 @@ final class Loader implements Latte\Loader
      */
     private function getTemplatePath( ?string $name = null ) : ?Path {
 
-        // Retrieve all parameters registered as Latte directories
-        $this->templateDirectories ??= Arr::unique(
-            array_filter(
-                array    : $this->parameterBag->all(),
-                callback : static fn ( $value, $key ) => is_string( $value ) && str_starts_with(
-                        $key, 'dir',
-                    ) && str_contains( $key, 'templates' ),
-                mode     : ARRAY_FILTER_USE_BOTH,
-            ),
-        );
         // Check if the Application has the requested template
-        $path = ( $this->templateDirectories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
+        $path = ( $this->templateDirs[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
 
         // If it does, return the Path
         if ( $path && file_exists( $path ) ) {
@@ -376,7 +371,7 @@ final class Loader implements Latte\Loader
         }
 
         // Else, loop through registered template directories until one is found
-        foreach ( $this->templateDirectories as $parameter => $path ) {
+        foreach ( $this->templateDirs as $parameter => $path ) {
             if ( file_exists( $path . $name ) ) {
                 return new Path( $path . $name );
             }

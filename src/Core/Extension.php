@@ -4,6 +4,7 @@ declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte\Core;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte;
 use Latte\Runtime\Template;
 use Northrook\Symfony\Latte\Nodes\ClassNode;
@@ -15,6 +16,7 @@ use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[Deprecated]
 final class Extension extends Latte\Extension
 {
     private Template $template;

@@ -2,6 +2,7 @@
 
 namespace Northrook\Symfony\Latte;
 
+use JetBrains\PhpStorm\Deprecated;
 use Northrook\Favicon\FaviconBundle;
 use Northrook\Symfony\Core\File;
 
@@ -17,6 +18,7 @@ use Northrook\Symfony\Core\File;
  * @property-read array   $scripts
  * @property-read array   $bodyAttributes
  */
+#[Deprecated]
 final class DocumentVariable
 {
 
@@ -176,9 +178,6 @@ final class DocumentVariable
             foreach ( $asset as $key => $value ) {
                 if ( $value instanceof \Stringable ) {
                     $this->{$type}[ $index ][ $key ] = (string) $value;
-                }
-                if ( is_bool( $value ) ) {
-                    // $this->{$type}[ $index ][ $key ] = $value ? true : 'false';
                 }
             }
         }

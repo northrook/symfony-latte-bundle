@@ -53,7 +53,8 @@ use Symfony\Component\Translation\LocaleSwitcher;
  * @property string            $routeInfo
  * @property ?UserInterface    $user
  * @property ?SessionInterface $session
- *  */
+ */
+#[Deprecated]
 class GlobalVariable extends ServiceResolver
 {
     private array $parameterCache = [];
