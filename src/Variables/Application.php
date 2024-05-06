@@ -28,6 +28,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *
  * @property Env               $env
  * @property UserAgent         $userAgent
+ * @property Theme             $theme
  * @property bool              $debug
  * @property array             $enabledLocales
  *
@@ -144,10 +145,5 @@ final readonly class Application
         }
 
         return $return;
-    }
-
-
-    public function showCached() : array {
-        return $this->cache->showCached();
     }
 }
