@@ -23,10 +23,13 @@ use Northrook\Core\Service\ServiceResolverTrait;
 use Northrook\Logger\Log;
 use Northrook\Support\Arr;
 use Northrook\Support\Str;
+use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
 use Northrook\Symfony\Latte\Extension\CoreExtension;
+use Northrook\Symfony\Latte\Extension\RenderHookExtension;
 use Northrook\Symfony\Latte\Preprocessor\Preprocessor;
 use Northrook\Symfony\Latte\Variables\Application;
 use Psr\Log\LoggerInterface;
+use Stringable;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
@@ -38,11 +41,12 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * @property ParameterBagInterface $parameterBag
  * @property LoggerInterface       $logger
  * @property Stopwatch             $stopwatch
+ * @property  RuntimeHookLoader    $hookLoader
  */
 class Environment extends ServiceResolver
 {
     use  ServiceResolverTrait;
-    
+
     private ?Latte\Engine  $latte = null;
     private readonly array $templateDirs;
 
@@ -59,12 +63,20 @@ class Environment extends ServiceResolver
         public readonly string          $applicationKey,
         Application | Closure           $applicationVariable,
         CoreExtension | Closure         $coreExtension,
+        RenderHookExtension | Closure   $renderHookExtension,
+        RuntimeHookLoader | Closure     $hookLoader,
         ParameterBagInterface | Closure $parameterBag,
         LoggerInterface | Closure       $logger,
         Stopwatch | Closure             $stopwatch,
     ) {
         $this->setMappedService( get_defined_vars() );
     }
+
+    public function addHook( string $name, string | Stringable $content ) : self {
+        $this->hookLoader->addHook( $name, $content );
+        return $this;
+    }
+
 
     /** Render '$template' to string
      *
