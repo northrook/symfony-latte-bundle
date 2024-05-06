@@ -31,7 +31,7 @@ final class RenderHookExtension extends Latte\Extension
     public function getRuntimeRenderHook( string $hook, ?string $fallback = null, bool $unique = true ) : ?string {
         $render = $this->hookLoader->get( $hook, $unique ) ?? $fallback;
         if ( $render ) {
-            $this->logger?->debug( "Rendering hook {$hook} with {$render}" );
+            $this->logger?->debug( "Rendering hook {$hook}, {$render}", [ 'hook' => $hook, 'render' => $render ] );
         }
 
         return $render;

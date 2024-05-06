@@ -218,6 +218,8 @@ final class Loader implements Latte\Loader
      * @param string  $name
      *
      * @return string
+     *
+     * @throws Latte\RuntimeException
      */
     public function getContent( string $name ) : string {
 
@@ -255,10 +257,6 @@ final class Loader implements Latte\Loader
         else {
 
             $file = $this->getTemplatePath( $name );
-
-            if ( !$file || !$file?->exists ) {
-                throw new Latte\RuntimeException( "Missing template file '$file'." );
-            }
 
             if ( !@touch( $file->value ) && $this->isExpired( $name, time() ) ) {
                 Log::error(
@@ -337,15 +335,8 @@ final class Loader implements Latte\Loader
 
         /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
         /// That way we can have a default template, like _document.latte
-
-
-        $template = $this->getTemplatePath( $name );
-
-        if ( !$template ) {
-            throw new Latte\RuntimeException( "Missing template '$name'." );
-        }
-
-        return $template->value;
+        
+        return $this->getTemplatePath( $name )->value;
 
     }
 
@@ -358,9 +349,9 @@ final class Loader implements Latte\Loader
      *
      * @param null|string  $name
      *
-     * @return null|Path
+     * @return Path
      */
-    private function getTemplatePath( ?string $name = null ) : ?Path {
+    private function getTemplatePath( ?string $name = null ) : Path {
 
         // Check if the Application has the requested template
         $path = ( $this->templateDirs[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
@@ -377,8 +368,7 @@ final class Loader implements Latte\Loader
             }
         }
 
-        // If none is found, return null
-        return null;
+        throw new Latte\RuntimeException( "Missing template: '$name'." );
     }
 
 }
