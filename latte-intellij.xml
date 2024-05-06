@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE latte PUBLIC "-//LATTE//Latte plugin XML V0.0.1//EN" "Latte.dtd">
-<latte vendor="latte" version="1">
+<latte vendor="northrook/symfony-latte-bundle" version="1">
     <tags>
         <tag name="_" type="UNPAIRED" allowFilters="true" documentation="prints translated"
              documentationUrl="https://latte.nette.org/en/tags#toc-translation">
