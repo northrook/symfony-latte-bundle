@@ -30,7 +30,8 @@ return static function ( ContainerConfigurator $container ) : void {
     // Latte Environment
     //--------------------------------------------------------------------
 
-    $services->set( 'latte.hook.loader', RuntimeHookLoader::class );
+    $services->set( 'latte.hook.loader', RuntimeHookLoader::class )
+             ->args( [ inline_service( Cache::class ) ] );
 
     $services->set( 'latte.extension.core', CoreExtension::class )
              ->args(
@@ -61,10 +62,7 @@ return static function ( ContainerConfigurator $container ) : void {
                      service_closure( 'logger' )->nullOnInvalid(),
                      service_closure( 'debug.stopwatch' )->nullOnInvalid(),
                  ],
-             )
-        // ->autowire()
-        // ->alias( Environment::class, 'latte.environment' )
-    ;
+             );
 
     //--------------------------------------------------------------------
     // Global Variable
