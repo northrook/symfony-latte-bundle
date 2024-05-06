@@ -32,10 +32,15 @@ class Document
         'content' => [ 'title' => null, 'description' => null, 'author' => null, 'keywords' => null ],
     ];
 
+    private array $assets = [
+        'stylesheets' => [],
+        'scripts'     => [],
+    ];
+
     public function __construct(
         array                  $meta,
-        private array          $stylesheets,
-        private array          $scripts,
+        array                  $stylesheets,
+        array                  $scripts,
         private readonly array $documentBodyAttributes,
 
         public bool            $manifest = true,
@@ -43,6 +48,8 @@ class Document
         public bool            $msApplication = true, // same
     ) {
         $this->assignDocumentMeta( $meta );
+        $this->assets[ 'stylesheets' ] = $stylesheets;
+        $this->assets[ 'scripts' ]     = $scripts;
     }
 
     public function __get( string $name ) : mixed {
@@ -68,7 +75,7 @@ class Document
         return array_key_exists( $name, $this->meta );
     }
 
-    public function meta( ?string $get = null, ?string $group = null ) : mixed {
+    public function meta( ?string $get = null, ?string $group = null ) : string | array {
 
         $array = $group ? $this->meta[ $group ] ?? [] : $this->meta;
 
@@ -161,21 +168,15 @@ class Document
     private function assets( string $type ) : array {
 
 
-        if ( !property_exists( $this, $type ) ) {
-            return [];
-        }
-
-        $assets = [];
-
-        foreach ( $this->{$type} as $index => $asset ) {
+        foreach ( $this->assets[ $type ] as $index => $asset ) {
             foreach ( $asset as $key => $value ) {
                 if ( $value instanceof \Stringable ) {
-                    $this->{$type}[ $index ][ $key ] = (string) $value;
+                    $this->assets[ $type ][ $index ][ $key ] = (string) $value;
                 }
             }
         }
 
-        return $this->{$type};
+        return $this->assets[ $type ];
     }
 
     private function assignDocumentMeta( ?array $meta = null ) : void {

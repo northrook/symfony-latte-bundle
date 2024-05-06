@@ -26,7 +26,7 @@ final class RuntimeHookLoader
      */
     public function get( string $hook, bool $unique = true, bool $returnObject = false ) : ?string {
 
-        if ( $unique && isset( $this->rendered[ $hook ] ) ) {
+        if ( ( $unique && isset( $this->rendered[ $hook ] ) ) || !isset( $this->hooks[ $hook ] ) ) {
             return null;
         }
 
@@ -35,7 +35,7 @@ final class RuntimeHookLoader
         if ( $returnObject ) {
             return $this->hooks[ $hook ] ?? null;
         }
-        
+
         if ( $this->cache->has( $hook ) ) {
             return $this->cache->get( $hook );
         }
