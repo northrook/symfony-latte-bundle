@@ -33,9 +33,7 @@ final class UserAgent
     private ?array  $browserCache    = null;
     private ?string $deviceTypeCache = null;
 
-    public function __construct(
-        private readonly ?LoggerInterface $logger = null,
-    ) {}
+    public function __construct( private readonly ?LoggerInterface $logger = null ) {}
 
     public function __isset( string $name ) : bool {
         return isset( $this->$name );
@@ -50,13 +48,14 @@ final class UserAgent
 
         if ( false === class_exists( BrowserDetection::class ) ) {
             $this?->logger->critical(
-                "The {service} service was requested, but not available.", [
-                'service'   => 'BrowserDetection',
-                'class'     => BrowserDetection::class,
-                'package'   => 'foroco/php-browser-detection ^2.7',
-                'method'    => __METHOD__,
-                'backtrace' => debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS ),
-            ],
+                "The {service} service was requested, but not available.",
+                [
+                    'service'   => 'BrowserDetection',
+                    'class'     => BrowserDetection::class,
+                    'package'   => 'foroco/php-browser-detection ^2.7',
+                    'method'    => __METHOD__,
+                    'backtrace' => debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS ),
+                ],
             );
 
             return false;

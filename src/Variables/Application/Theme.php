@@ -2,6 +2,12 @@
 
 namespace Northrook\Symfony\Latte\Variables\Application;
 
+/**
+ * Return type for {@see Application::getTheme()}
+ *
+ * @version 1.0 ✅
+ * @author  Martin Nielsen <mn@northrook.com>
+ */
 final readonly class Theme
 {
 

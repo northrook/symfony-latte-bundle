@@ -4,7 +4,8 @@ namespace Northrook\Symfony\Latte\Variables\Application;
 
 use Northrook\Symfony\Latte\Variables\Application;
 
-/** Return Type for {@see Application::getEnv()}
+/**
+ * Return type for {@see Application::getEnv()}
  *
  * @version 1.0 ✅
  * @author  Martin Nielsen <mn@northrook.com>
