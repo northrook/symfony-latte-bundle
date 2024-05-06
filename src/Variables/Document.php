@@ -34,9 +34,10 @@ class Document
 
     public function __construct(
         array                  $meta,
-        private readonly array $stylesheets,
-        private readonly array $scripts,
+        private array          $stylesheets,
+        private array          $scripts,
         private readonly array $documentBodyAttributes,
+
         public bool            $manifest = true,
         // may need to be assigned to public readonly after checking for a manifest
         public bool            $msApplication = true, // same
@@ -45,7 +46,7 @@ class Document
     }
 
     public function __get( string $name ) : mixed {
-        return match ( strtolower( $name ) ) {
+        return match ( $name ) {
             'title'                  => $this->meta( 'title', 'content' ),
             'description'            => $this->meta( 'description', 'content' ),
             'author'                 => $this->meta( 'author', 'content' ),
@@ -67,7 +68,7 @@ class Document
         return array_key_exists( $name, $this->meta );
     }
 
-    public function meta( ?string $get = null, ?string $group = null ) : ?array {
+    public function meta( ?string $get = null, ?string $group = null ) : mixed {
 
         $array = $group ? $this->meta[ $group ] ?? [] : $this->meta;
 
@@ -76,6 +77,10 @@ class Document
         }
 
         $meta = [];
+
+        if ( is_string( $array ) ) {
+            return $array;
+        }
 
         foreach ( $array as $name => $content ) {
             if ( $this->printed( $name ) ) {

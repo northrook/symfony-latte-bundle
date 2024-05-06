@@ -5,6 +5,7 @@ namespace Northrook\Symfony\Latte\Variables;
 use Northrook\Core\Cache;
 use Northrook\Symfony\Latte\Variables\Application\ApplicationDependencies;
 use Northrook\Symfony\Latte\Variables\Application\Env;
+use Northrook\Symfony\Latte\Variables\Application\Theme;
 use Northrook\Symfony\Latte\Variables\Application\UserAgent;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,8 +42,8 @@ final readonly class Application
 {
 
     public function __construct(
-        private readonly string         $environment,
-        private readonly bool           $debug,
+        private string                  $environment,
+        private bool                    $debug,
         private Cache                   $cache,
         private ApplicationDependencies $get,
     ) {}
@@ -56,6 +57,7 @@ final readonly class Application
             'request'        => $this->getRequest(),
             'session'        => $this->getSession(),
             'env'            => $this->getEnv(),
+            'theme'          => $this->getTheme(),
             'useragent'      => $this->getUserAgent(),
             'debug'          => $this->debug,
             'user'           => $this->get->tokenStorage->getToken()?->getUser(),
@@ -86,6 +88,10 @@ final readonly class Application
 
     private function getUserAgent() : UserAgent {
         return $this->cache->value( key : 'useragent', value : new UserAgent( $this->get->logger ) );
+    }
+
+    private function getTheme() : Theme {
+        return $this->cache->value( key : 'theme', value : new Theme() );
     }
 
     private function getRequest() : ?Request {
@@ -139,6 +145,5 @@ final readonly class Application
 
         return $return;
     }
-
 
 }

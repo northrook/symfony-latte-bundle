@@ -42,8 +42,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class Environment extends ServiceResolver
 {
     use  ServiceResolverTrait;
-
-
+    
     private ?Latte\Engine  $latte = null;
     private readonly array $templateDirs;
 
@@ -63,7 +62,9 @@ class Environment extends ServiceResolver
         ParameterBagInterface | Closure $parameterBag,
         LoggerInterface | Closure       $logger,
         Stopwatch | Closure             $stopwatch,
-    ) {}
+    ) {
+        $this->setMappedService( get_defined_vars() );
+    }
 
     /** Render '$template' to string
      *

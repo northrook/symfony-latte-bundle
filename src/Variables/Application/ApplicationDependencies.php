@@ -33,7 +33,9 @@ final class ApplicationDependencies extends ServiceResolver
         LocaleSwitcher | Closure            $localeSwitcher,
         CsrfTokenManagerInterface | Closure $csrfTokenManager,
         LoggerInterface | Closure           $logger,
-    ) {}
+    ) {
+        $this->setMappedService( get_defined_vars() );
+    }
 
     public function getEnabledLocales() : ?array {
         return $this->enabledLocales ?? null;

@@ -4,8 +4,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 
 use Northrook\Core\Cache;
+use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Extension\CoreExtension;
+use Northrook\Symfony\Latte\Extension\RenderHookExtension;
 use Northrook\Symfony\Latte\Variables\Application;
 use Northrook\Symfony\Latte\Variables\Application\ApplicationDependencies;
 
@@ -23,14 +25,25 @@ return static function ( ContainerConfigurator $container ) : void {
               ->set( 'latte.parameter_key.global', 'get' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
+
     //--------------------------------------------------------------------
     // Latte Environment
     //--------------------------------------------------------------------
+
+    $services->set( 'latte.hook.loader', RuntimeHookLoader::class );
 
     $services->set( 'latte.extension.core', CoreExtension::class )
              ->args(
                  [
                      service( 'router' ),
+                     service( 'logger' )->nullOnInvalid(),
+                 ],
+             );
+
+    $services->set( 'latte.extension.hook', RenderHookExtension::class )
+             ->args(
+                 [
+                     service( 'latte.hook.loader' ),
                      service( 'logger' )->nullOnInvalid(),
                  ],
              );
@@ -42,6 +55,8 @@ return static function ( ContainerConfigurator $container ) : void {
                      param( 'latte.parameter_key.global' ),
                      service_closure( 'latte.parameters.application' ),
                      service_closure( 'latte.extension.core' ),
+                     service_closure( 'latte.extension.hook' ),
+                     service_closure( 'latte.hook.loader' ),
                      service_closure( 'parameter_bag' ),
                      service_closure( 'logger' )->nullOnInvalid(),
                      service_closure( 'debug.stopwatch' )->nullOnInvalid(),
