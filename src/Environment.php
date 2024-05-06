@@ -38,6 +38,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 /**
  * @property Application           $applicationVariable
  * @property CoreExtension         $coreExtension
+ * @property RenderHookExtension   $renderHookExtension
  * @property ParameterBagInterface $parameterBag
  * @property LoggerInterface       $logger
  * @property Stopwatch             $stopwatch
@@ -110,7 +111,8 @@ class Environment extends ServiceResolver
 
         $this->stopwatch?->start( 'engine', 'latte' );
 
-        $this->addExtension( $this->coreExtension );
+        $this->addExtension( $this->coreExtension )
+             ->addExtension( $this->renderHookExtension );
 
         $this->latte = new Latte\Engine();
 

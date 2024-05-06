@@ -24,15 +24,16 @@ final class RenderHookExtension extends Latte\Extension
         ];
     }
 
-    public function echoRuntimeRenderHook( string $hook, ?string $fallback = null ) : void {
-        echo $this->getRuntimeRenderHook( $hook, $fallback );
+    public function echoRuntimeRenderHook( string $hook, ?string $fallback = null, bool $unique = true ) : void {
+        echo $this->getRuntimeRenderHook( $hook, $fallback, $unique );
     }
 
-    public function getRuntimeRenderHook( string $hook, ?string $fallback = null ) : ?string {
-        $render = $this->hookLoader->get( $hook ) ?? $fallback;
+    public function getRuntimeRenderHook( string $hook, ?string $fallback = null, bool $unique = true ) : ?string {
+        $render = $this->hookLoader->get( $hook, $unique ) ?? $fallback;
         if ( $render ) {
             $this->logger?->debug( "Rendering hook {$hook} with {$render}" );
         }
+
         return $render;
     }
 }
