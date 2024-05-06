@@ -146,4 +146,8 @@ final readonly class Application
         return $return;
     }
 
+
+    public function showCached() : array {
+        return $this->cache->showCached();
+    }
 }
