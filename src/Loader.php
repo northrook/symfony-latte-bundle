@@ -20,9 +20,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
  */
 final class Loader implements Latte\Loader
 {
-    private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
 
-    private const NORMALIZE_VARIABLES = [
+    private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
+    private const NORMALIZE_VARIABLES    = [
         '{ $'       => '{$',
         '$}'        => '$}',
         '{ ('       => '{(',
@@ -30,7 +30,10 @@ final class Loader implements Latte\Loader
         '%%ARROW%%' => '->',
     ];
 
-    private bool $isStringLoader = false;
+
+    private static array $loadedTemplates = [];
+    private string       $uniqueId;
+    private bool         $isStringLoader  = false;
 
 
     private string         $content;
@@ -52,6 +55,10 @@ final class Loader implements Latte\Loader
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
     ) {}
+
+    public static function getLoadedTemplates() : array {
+        return Loader::$loadedTemplates;
+    }
 
     /**
      * TODO: Improve the regex pattern for matching `{$variable_Names->values`}, case-sensitivity, special characters like underscore etc.
@@ -213,7 +220,6 @@ final class Loader implements Latte\Loader
     }
 
     /**
-     * Entry point for the template loader.
      *
      * @param string  $name
      *
@@ -328,15 +334,21 @@ final class Loader implements Latte\Loader
 
         $this->isStringLoader = !str_ends_with( $name, '.latte' );
 
-        if ( $this->isStringLoader ) {
-            return $this->getContent( $name );
-        }
+        $this->uniqueId = $this->isStringLoader ? $this->getContent( $name ) : $this->getTemplatePath( $name )->value;
 
+        Loader::$loadedTemplates[] = $this->uniqueId;
 
-        /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
-        /// That way we can have a default template, like _document.latte
-        
-        return $this->getTemplatePath( $name )->value;
+        return $this->uniqueId;
+
+        // if ( $this->isStringLoader ) {
+        //     return $this->getContent( $name );
+        // }
+        //
+        //
+        // /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
+        // /// That way we can have a default template, like _document.latte
+        //
+        // return $this->getTemplatePath( $name )->value;
 
     }
 
