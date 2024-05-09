@@ -52,6 +52,7 @@ final class CoreExtension extends Latte\Extension
 
     public function getFunctions() : array {
         return [
+            'time'        => [ $this, 'time' ],
             'path'        => [ $this, 'resolvePathFromRoute' ],
             'print_debug' => static function ( ...$args ) {
                 echo '<pre>';
@@ -70,6 +71,24 @@ final class CoreExtension extends Latte\Extension
             },
             'dd'          => static fn ( ...$args ) => dd( $args ),
         ];
+    }
+
+    /**
+     * Returns a formatted time string, based on {@see date()}.
+     *
+     * @param string|null  $format
+     * @param int|null     $timestamp
+     *
+     * @return string
+     *
+     * @see https://www.php.net/manual/en/function.date.php See docs for supported formats
+     */
+    public function time( ?string $format = null, ?int $timestamp = null ) : string {
+
+        // TODO: Add support for date and time formats
+        // TODO: Add support for centralized date and time formats
+
+        return date( $format ?? 'Y-m-d H:i:s', $timestamp );
     }
 
 

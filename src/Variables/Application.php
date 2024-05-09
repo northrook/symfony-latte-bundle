@@ -112,6 +112,24 @@ final readonly class Application
     }
 
     /**
+     * Returns a formatted time string, based on {@see date()}.
+     *
+     * @param string|null  $format
+     * @param int|null     $timestamp
+     *
+     * @return string
+     *
+     * @see https://www.php.net/manual/en/function.date.php See docs for supported formats
+     */
+    public function time( ?string $format = null, ?int $timestamp = null ) : string {
+
+        // TODO: Add support for date and time formats
+        // TODO: Add support for centralized date and time formats
+
+        return date( $format ?? 'Y-m-d H:i:s', $timestamp );
+    }
+
+    /**
      * Returns some or all the existing flash messages:
      *  * getFlashes() returns all the flash messages
      *  * getFlashes('notice') returns a simple array with flash messages of that type
