@@ -31,7 +31,8 @@
     "northrook/elements": "dev-main",
     "ext-fileinfo": "*",
     "ext-gd": "*",
-    "northrook/favicon": "dev-main"
+    "northrook/favicon": "dev-main",
+    "symfony/ux-icons": "2.x-dev"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",

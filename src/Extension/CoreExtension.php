@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\UX\Icons\IconRenderer;
 
 final class CoreExtension extends Latte\Extension
 {
@@ -52,6 +53,7 @@ final class CoreExtension extends Latte\Extension
 
     public function getFunctions() : array {
         return [
+            'icon'        => [ IconRenderer::class, 'renderIcon' ],
             'time'        => [ $this, 'time' ],
             'path'        => [ $this, 'resolvePathFromRoute' ],
             'print_debug' => static function ( ...$args ) {
