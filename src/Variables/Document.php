@@ -5,7 +5,7 @@ declare( strict_types = 1 );
 namespace Northrook\Symfony\Latte\Variables;
 
 use Northrook\Favicon\FaviconBundle;
-use Northrook\Symfony\Core\File;
+use Northrook\Symfony\Core\Path;
 
 
 /**
@@ -110,13 +110,22 @@ class Document
     }
 
 
+    /**
+     * @return array<string, string>
+     * @todo Inject the favicon links into the document from Controller.
+     *
+     */
     public function favicon( ?string $dir = null ) : array {
 
         $links = FaviconBundle::links();
 
         foreach ( FaviconBundle::links() as $key => $link ) {
             $url =
-                implode( DIRECTORY_SEPARATOR, array_filter( [ File::path( 'dir.public' ), $dir, $link[ 'href' ] ] ), );
+                implode(
+                    DIRECTORY_SEPARATOR, array_filter(
+                    [ Path::get( 'dir.public' ), $dir, $link[ 'href' ] ],
+                ),
+                );
             if ( !file_exists( $url ) ) {
                 unset( $links[ $key ] );
             }
