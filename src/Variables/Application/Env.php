@@ -7,6 +7,8 @@ use Northrook\Symfony\Latte\Variables\Application;
 /**
  * Return type for {@see Application::getEnv()}
  *
+ * @internal
+ *
  * @version 1.0 ✅
  * @author  Martin Nielsen <mn@northrook.com>
  */

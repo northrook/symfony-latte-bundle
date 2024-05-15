@@ -3,8 +3,8 @@
 namespace Northrook\Symfony\Latte;
 
 use Latte;
-use Northrook\Symfony\Core\App;
-use Northrook\Symfony\Core\File;
+use Northrook\Symfony\Core\Env;
+use Northrook\Symfony\Core\Path;
 use Northrook\Types\Interfaces\Printable;
 
 class Render implements Printable
@@ -17,9 +17,9 @@ class Render implements Printable
         private array          $parameters = [],
     ) {
         $this->latte = new Latte\Engine();
-        $this->latte->setTempDirectory( File::path( 'dir.latte.cache' ) );
+        $this->latte->setTempDirectory( Path::get( 'dir.latte.cache' ) );
 
-        if ( App::env( 'debug' ) ) {
+        if ( Env::isDebug() ) {
             $this->latte->setAutoRefresh( true );
         }
     }
