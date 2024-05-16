@@ -5,7 +5,7 @@ declare( strict_types = 1 );
 namespace Northrook\Symfony\Latte\Variables;
 
 use Northrook\Favicon\FaviconBundle;
-use Northrook\Symfony\Core\Path;
+use Northrook\Symfony\Core\Facade\Path;
 
 
 /**
