@@ -4,7 +4,7 @@ namespace Northrook\Symfony\Latte;
 
 use Latte;
 use Northrook\Symfony\Core\Env;
-use Northrook\Symfony\Core\Path;
+use Northrook\Symfony\Core\Facade\Path;
 use Northrook\Types\Interfaces\Printable;
 
 class Render implements Printable
