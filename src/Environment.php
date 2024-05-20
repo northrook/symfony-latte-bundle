@@ -4,6 +4,20 @@ declare( strict_types = 1 );
 
 namespace Northrook\Symfony\Latte;
 
+use Latte;
+use Northrook\Support\Arr;
+use Northrook\Support\Str;
+use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
+use Northrook\Symfony\Latte\Extension\CoreExtension;
+use Northrook\Symfony\Latte\Extension\RenderHookExtension;
+use Northrook\Symfony\Latte\Variables\Application;
+use Psr\Log\LoggerInterface;
+use Stringable;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Stopwatch\Stopwatch;
+
 /*--------------------------------------------------------------------
 
     Latte Environment
@@ -16,73 +30,58 @@ namespace Northrook\Symfony\Latte;
 
 /-------------------------------------------------------------------*/
 
-use Closure;
-use Latte;
-use Northrook\Core\Service\ServiceResolver;
-use Northrook\Core\Service\ServiceResolverTrait;
-use Northrook\Logger\Log;
-use Northrook\Support\Arr;
-use Northrook\Support\Str;
-use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
-use Northrook\Symfony\Latte\Extension\CoreExtension;
-use Northrook\Symfony\Latte\Extension\RenderHookExtension;
-use Northrook\Symfony\Latte\Preprocessor\Preprocessor;
-use Northrook\Symfony\Latte\Variables\Application;
-use Psr\Log\LoggerInterface;
-use Stringable;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Stopwatch\Stopwatch;
+// Provide a template for 404 and 500 pages.
 
-/**
- * @property Application           $applicationVariable
- * @property CoreExtension         $coreExtension
- * @property RenderHookExtension   $renderHookExtension
- * @property ParameterBagInterface $parameterBag
- * @property LoggerInterface       $logger
- * @property Stopwatch             $stopwatch
- * @property  RuntimeHookLoader    $hookLoader
- */
-class Environment extends ServiceResolver
+class Environment
 {
-    use  ServiceResolverTrait;
 
-    private ?Latte\Engine  $latte = null;
-    private readonly array $templateDirs;
+    /** The {@see Latte\Engine} instance used in this {@see Environment}. */
+    private ?Latte\Engine $latte = null;
 
     /** @var Latte\Extension[] */
     private array $extensions = [];
 
-    /** @var Preprocessor[] */
-    private array $preprocessors = [];
+    /**
+     * `key=>value` store of all registered template directories
+     *
+     * @var array<string, string>
+     */
+    private readonly array $templateDirectories;
 
-    public bool $autoRefresh = true;
+    //❔Tentative
+    private array $templateStrings = [];
 
+    public bool $autoRefresh;
+
+    /**
+     * @param string  $cacheDir        The directory to store compiled templates in.
+     * @param string  $applicationKey  The key to use for the {@see Application} variable.
+     * @param string  $documentKey     The key to use for the {@see Document} variable.
+     */
     public function __construct(
-        public readonly string          $cacheDir,
-        public readonly string          $applicationKey,
-        Application | Closure           $applicationVariable,
-        CoreExtension | Closure         $coreExtension,
-        RenderHookExtension | Closure   $renderHookExtension,
-        RuntimeHookLoader | Closure     $hookLoader,
-        ParameterBagInterface | Closure $parameterBag,
-        LoggerInterface | Closure       $logger,
-        Stopwatch | Closure             $stopwatch,
-    ) {
-        $this->setMappedService( get_defined_vars() );
-    }
+        public readonly string                 $cacheDir,
+        public readonly string                 $applicationKey,
+        public readonly string                 $documentKey,
+        private readonly Application           $applicationVariable,
+        private readonly CoreExtension         $coreExtension,
+        private readonly RenderHookExtension   $renderHookExtension,
+        private readonly RuntimeHookLoader     $runtimeHook,
+        private readonly ParameterBagInterface $parameterBag,
+        private readonly ?LoggerInterface      $logger = null,
+        private readonly ?Stopwatch            $stopwatch = null,
+    ) {}
+
 
     public function addHook( string $name, string | Stringable $content ) : self {
-        $this->hookLoader->addHook( $name, $content );
+        $this->runtimeHook->addHook( $name, $content );
         return $this;
     }
 
-
-    /** Render '$template' to string
+    /**
+     * Render '$template' to string
      *
-     * * Accepts a path to a template file or a template string.
-     * * Parses `$parameters` into Latte variables.
+     * - Accepts a path to a template file or a template string.
+     * - Parses `$parameters` into Latte variables.
      *
      * @param string             $template
      * @param object|array|null  $parameters
@@ -103,38 +102,54 @@ class Environment extends ServiceResolver
         return $render;
     }
 
-    public function startEngine() : Latte\Engine {
+    // ---------------------------------------------------------------------
 
+    public function startEngine( ?Latte\Loader $loader = null ) : Environment {
+
+        // Only start one Engine at a time.
         if ( $this->latte ) {
-            return $this->latte;
+            return $this;
         }
 
-        $this->stopwatch?->start( 'engine', 'latte' );
+        $this->stopwatch?->start( 'Latte Engine', 'Latte' );
 
+        // Enable auto-refresh when debugging.
+        if ( !isset( $this->autoRefresh ) && $this->parameterBag->get( 'debug' ) ) {
+            dump( 'Auto-refresh enabled due to env:debug' );
+            $this->autoRefresh = true;
+        }
+
+
+        // Add included extensions.
         $this->addExtension( $this->coreExtension )
              ->addExtension( $this->renderHookExtension );
 
+        // Initialize the Engine.
         $this->latte = new Latte\Engine();
 
+        // Add all registered extensions to the Engine.
         foreach ( $this->extensions as $extension ) {
             $this->latte->addExtension( $extension );
         }
 
-        $loader = new Loader(
-            $this->getTemplateDirs(),
-            $this->latte->getExtensions(),
-            $this->preprocessors,
-            $this->logger,
-            $this->stopwatch,
+        // Use the included Loader unless one is provided.
+        $loader ??= new Loader(
+            directories : $this->getTemplateDirs(),
+            templates   : $this->templateStrings,
+            extensions  : $this->extensions,
+            logger      : $this->logger,
+            stopwatch   : $this->stopwatch,
         );
 
         $this->latte->setTempDirectory( $this->cacheDir )
                     ->setAutoRefresh( $this->autoRefresh )
                     ->setLoader( $loader );
 
-
-        return $this->latte;
+        return $this;
     }
+
+    // ---------------------------------------------------------------------
+
 
     /**
      * Add {@see Latte\Extension}s to this {@see Environment}.
@@ -150,27 +165,6 @@ class Environment extends ServiceResolver
                 continue;
             }
             $this->extensions[] = $ext;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add {@see Preprocessor}s to this {@see Environment}.
-     *
-     * @param Preprocessor  ...$preprocessor
-     *
-     * @return $this
-     *
-     * @todo [low] Refactor {@see Preprocessor} system.
-     */
-    public function addPreprocessor( Preprocessor ...$preprocessor ) : self {
-
-        foreach ( $preprocessor as $ext ) {
-            if ( in_array( $ext, $this->preprocessors, true ) ) {
-                continue;
-            }
-            $this->preprocessors[] = $ext;
         }
 
         return $this;
@@ -212,7 +206,6 @@ class Environment extends ServiceResolver
         return $parameters;
     }
 
-
     /**
      * Reset the Environment.
      *
@@ -235,6 +228,8 @@ class Environment extends ServiceResolver
      *
      * ⚠️ This will cause all templates to be recompiled on-demand.
      *
+     * ℹ️ The recompile proccess has stampede protection, so recompiling may take a while.
+     *
      * @return bool Returns true on success
      */
     final public function clearCache() : bool {
@@ -242,7 +237,7 @@ class Environment extends ServiceResolver
             ( new Filesystem() )->remove( $this->cacheDir );
         }
         catch ( IOException $e ) {
-            Log::Error( $e->getMessage() );
+            $this->logger->error( $e->getMessage() );
             return false;
         }
 
@@ -255,7 +250,8 @@ class Environment extends ServiceResolver
      * @return array
      */
     final public function getTemplateDirs() : array {
-        return $this->templateDirs ??= Arr::unique(
+        // TODO : May want  to cache this, check if the core.cache is sufficient.
+        return $this->templateDirectories ??= Arr::unique(
             array_filter(
                 array    : $this->parameterBag->all(),
                 callback : static fn ( $value, $key ) => is_string( $value ) &&
@@ -264,4 +260,5 @@ class Environment extends ServiceResolver
             ),
         );
     }
+
 }

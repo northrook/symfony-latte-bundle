@@ -18,9 +18,12 @@ use Latte\Compiler\Tag;
 
 /**
  *
+ *
  * Take existing attributes into account, and only add new ones
  *
  * n:attributes="..."
+ *
+ * @experimental Direct copy of {@see AttributeNode}, custom implement to follow.
  */
 final class ElementNode extends StatementNode
 {

@@ -2,27 +2,34 @@
 
 namespace Northrook\Symfony\Latte;
 
+use JetBrains\PhpStorm\Deprecated;
 use Latte;
 use Latte\Extension;
-use Northrook\Logger\Log;
-use Northrook\Logger\Timer;
+use Northrook\Core\Interface\Printable;
+use Northrook\Core\Type\PathType;
 use Northrook\Support\Attributes\EntryPoint;
-use Northrook\Symfony\Latte\Preprocessor\PreprocessorInterface;
-use Northrook\Types\Path;
+use Northrook\Support\Attributes\Output;
+use Northrook\Support\File;
+use Northrook\Support\Get;
+use Northrook\Support\Str;
+use Northrook\Support\Trim;
+use Northrook\Symfony\Latte\Compiler\MissingTemplateException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-/** Load templates from .latte files, preloaded templates, or raw string.
- *
- * * Reads the template data, passing it through each precompiler if supplied.
- *
- * @api Entry point
+/**
+ * Load templates from .latte files, preloaded templates, or raw string.
  */
 final class Loader implements Latte\Loader
 {
-
     private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
-    private const NORMALIZE_VARIABLES    = [
+
+    // »
+    // ␛
+
+    private const ARROW = '%%\-\>%%';
+
+    private const NORMALIZE_VARIABLES = [
         '{ $'       => '{$',
         '$}'        => '$}',
         '{ ('       => '{(',
@@ -30,273 +37,322 @@ final class Loader implements Latte\Loader
         '%%ARROW%%' => '->',
     ];
 
-
+    /**
+     * List of loaded templates during the current request.
+     *
+     * @var array<string, string>
+     */
     private static array $loadedTemplates = [];
-    private string       $uniqueId;
-    private bool         $isStringLoader  = false;
 
+    /**
+     * Holds available string templates.
+     *
+     * @var string|array<string, string>
+     */
+    private array $templates = [];
 
-    private string         $content;
-    public readonly string $baseDir;
+    /**
+     * Holds the directories to search for templates.
+     *
+     * @var array<string, string>
+     */
+    private array $directories = [];
+
+    private array $filterContent = [];
+
+    private string $content;
+
+    /**
+     * Set by {@see getUniqueId()} when loading a template file.
+     *
+     * @var ?string
+     */
+    protected ?string $baseDir = null;
+
+    /**
+     * Set `true` by {@see getContent()} when loading a string template.
+     *
+     * @var bool
+     */
+    protected bool $isStringLoader = false;
 
 
     /**
-     * @param array                    $templateDirs
-     * @param Extension[]              $extensions
-     * @param PreprocessorInterface[]  $preprocessors
-     * @param ?LoggerInterface         $logger
-     * @param ?Stopwatch               $stopwatch
+     * @param null|string|array  $directories
+     * @param null|string|array  $templates
+     * @param Extension[]        $extensions
+     * @param bool               $normalizeLatteTags
+     * @param bool               $normalizeLatteBrackets
+     * @param bool               $purgeComments
+     * @param ?LoggerInterface   $logger
+     * @param ?Stopwatch         $stopwatch
      */
     public function __construct(
-        private readonly array            $templateDirs,
-        // public readonly ?array            $templates = null,
+        null | string | array             $directories = null,
+        null | string | array             $templates = null,
         private readonly array            $extensions = [],
-        private readonly array            $preprocessors = [],
+        protected bool                    $normalizeLatteTags = true,
+        protected bool                    $normalizeLatteBrackets = true,
+        protected bool                    $purgeComments = true,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
-    ) {}
+    ) {
 
-    public static function getLoadedTemplates() : array {
-        return Loader::$loadedTemplates;
+        $this->stopwatch->start( 'Parse Template', 'Latte' );
+
+        $this->assignDirectories( $templates );
+        $this->assignTemplates( $templates );
     }
 
     /**
-     * TODO: Improve the regex pattern for matching `{$variable_Names->values`}, case-sensitivity, special characters like underscore etc.
      *
-     * @param string  $content
+     * Pass an array of strings to be replaced.
      *
-     * @return string
+     * @param array<string, string|Printable>  $array
+     *
+     * @return void
      */
-    public static function prepare( string $content ) : string {
+    public function filterContent( array $array ) : void {
+        $this->filterContent = array_merge( $this->filterContent, $array );
+    }
 
-        $content = preg_replace( '/\R.+<!--.+-->(?=\R\R)/', '', $content );
+    private function handleLatteTags( string $content ) : string {
 
-        $content = str_replace( "\n>", '>', $content );
+        // Tags not visible in Latte\Extension
+        $tags = [ 'n:if' ];
 
-        return preg_replace_callback(
-            "/\\\$[a-zA-Z?>._':$\s\-]*/m",
-            static function ( array $m ) {
-                return str_replace( '->', '%%ARROW%%', $m[ 0 ] );
-            },
+        // Get all tags from all provided extensions
+        foreach ( $this->extensions as $extension ) {
+
+            /**
+             * @var array<string, callable> $extensionTags
+             */
+            $extensionTags = $extension->getTags();
+
+            $tags += array_keys( $extensionTags );
+        }
+
+        // Deduplicate tags
+        $tags = array_flip( array_flip( $tags ) );
+
+        $this->logger->info(
+            "Latte Loader: found {count} tags.",
+            [ 'count' => count( $tags ) ],
+        );
+
+        foreach ( $tags as $tag ) {
+            $content = preg_replace_callback(
+                pattern  : "#$tag=\"(.*?)\"#s",
+                callback : static function ( array $match ) use ( $tag ) {
+
+                    dump( $match );
+                    $value = Trim::whitespace( trim( $match[ 1 ], " {}" ) );
+                    dump( $value );
+                    return $value ? "$tag=\"$value\"" : null;
+                },
+                subject  : $content,
+            );
+        }
+
+        return $content;
+    }
+
+    private function prepareTemplate( string $content ) : string {
+
+        // Ensure elements are not broken across multiple lines.
+        $content = preg_replace( '#(<[^>]*?)\R+([^>]*?>)#', '$1$2', $content );
+
+        // Safely handle object operators
+        $content = preg_replace(
+            '#(->)\w#', // Match all object operators
+            '%%OBJECT_OPERATOR%%$2',
             $content,
         );
+
+        if ( $this->normalizeLatteTags ) {
+            $content = $this->handleLatteTags( $content );
+        }
+
+        // Ensure elements are not broken across multiple lines.
+        if ( $this->normalizeLatteBrackets ) {
+            $content = preg_replace_callback(
+                '#(->)\w#', // Match all object operators
+                static function ( array $m ) {
+                    return str_replace( '->', '%%ARROW%%', $m[ 0 ] );
+                },
+                $content,
+            );
+        }
+
+        if ( $this->purgeComments ) {
+            $content = Trim::whitespace( $content );
+        }
+
+        return $content;
     }
 
     /**
-     * # Exit Point
-     *
-     * * Prepare and compile the template.
-     * * The content is passed through each precompiler.
+     * - Prepare and compile the template.
+     * - The content can be filtered using {@see filterContent()}.
      *
      * @param string  $content
      *
      * @return string
      */
     private function compile( string $content ) : string {
-        $debug = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
 
+        $this->content = $this->prepareTemplate( $content );
 
-        $content = $this->latteTags( $content );
-        $content = $this::prepare( $content );
-        // dd( $content);
+        foreach ( $this->filterContent as $find => $replace ) {
 
-        foreach ( $this->preprocessors as $index => $compiler ) {
+            // Determine if the $replace value is a component
+            $isComponent = $replace instanceof Printable;
 
-            if ( !$compiler instanceof PreprocessorInterface ) {
-                $this->logger?->emergency(
-                    "Preprocessor {preprocessor} must implement PreprocessorInterface.",
-                    [ 'preprocessor' => get_class( $compiler ) ],
-                );
-                continue;
+            // If it is a component, print it and start a stopwatch
+            if ( $isComponent ) {
+                $component = 'Component: ' . Get::className( $replace );
+                $this->stopwatch->start( $component, 'Latte' );
+                $replace = $replace->print();
             }
 
-            Timer::start( 'preprocessor' );
+            // Compress the $replace value and replace it in the content
+            $replace       = Trim::whitespace( $replace );
+            $this->content = str_ireplace( $find, $replace, $this->content );
 
-            $content = $compiler->setProfiler(
-                $this->logger,
-                $this->stopwatch,
-            )
-                                ->load( $content )
-                                ->getContent();
+            // If it is a component, stop the respective stopwatch
+            if ( $isComponent ) {
 
-            $time = Timer::get( 'preprocessor' );
+                // TODO : Consider warning if the is unexpected slow
+                // $slow = match ( true ) {
+                //     $time >= 55 => 'error',
+                //     $time >= 35 => 'warning',
+                //     $time >= 25 => 'notice',
+                //     default     => false,
+                // };
 
-            $slow = match ( true ) {
-                $time >= 55 => 'error',
-                $time >= 35 => 'warning',
-                $time >= 25 => 'notice',
-                default     => false,
-            };
-
-            if ( $slow ) {
-                $this->logger?->log(
-                    $slow,
-                    "Preprocessor {preprocessor} took {time} seconds.", [
-                        'preprocessor' => get_class( $compiler ),
-                        'time'         => "{$time}ms",
-                    ],
-                );
+                $this->stopwatch->stop( $component );
             }
-
         }
 
-
-        $content = str_ireplace(
-            array_keys( Loader::NORMALIZE_VARIABLES ),
-            array_values( Loader::NORMALIZE_VARIABLES ),
-            $content,
+        // Set object operators
+        $this->content = str_ireplace(
+            search  : '%%OBJECT_OPERATOR%%',
+            replace : '->',
+            subject : $this->content,
         );
 
-        return preg_replace( [ '/\R(?=\R)/', '/\R(.+<!--)/' ], [ "", "\n\n$1" ], $content );
+        // Stop the stopwatch
+        $this->stopwatch->stop( 'Parse Template' );
+
+        return $this->content;
     }
 
-
-    /** Ensures that Latte tags are parsed correctly.
-     *
-     * * Finds all registered n:tags.
-     * * Parses {$tag->var} into $tag->var within n:tags
-     *
-     * @param string  $content
-     *
-     * @return string
-     */
-    private function latteTags( string $content ) : string {
-
-        // Tags not visible in Latte\Extension
-        $tags = [ 'n:if' ];
-
-        foreach ( $this->extensions as $extension ) {
-            if ( $extension instanceof Latte\Extension ) {
-                $extension = $extension->getTags();
-            }
-
-            if ( is_string( $extension ) ) {
-                $tags[] = $extension;
-            }
-
-            else {
-                if ( !is_array( $extension ) ) {
-                    continue;
-                }
-            }
-
-            foreach ( $extension as $tag => $parser ) {
-                if ( str_starts_with( $tag, 'n:' ) ) {
-                    $tags[] = $tag;
-                }
-            }
-        }
-
-
-        foreach ( $tags as $tag ) {
-
-            $content = preg_replace_callback(
-                "/$tag=\"(.*?)\"/ms",
-                function ( array $match ) use ( $tag ) {
-
-                    $value = trim( $match[ 1 ], " {}" );
-                    // dump($match);
-
-                    // TODO: Improve auto-null to allow for filters (check from $ to pipe)
-                    // if ( str_contains( $value, '$' ) ) {
-                    //     // if ( !str_contains( $value, '??' ) ) {
-                    //     //     $value .= '??false';
-                    //     // }
-                    // }
-                    // else {
-                    //     $value = "'$value'";
-                    // }
-
-                    return "$tag=\"$value\"";
-                },
-                $content,
-            );
-
-        }
-
-        // dump( $content);
-
-        return $content;
-    }
 
     /**
+     * Returns template source code to the {@see Engine}.
      *
      * @param string  $name
      *
      * @return string
      *
-     * @throws Latte\RuntimeException
+     * @throws Latte\RuntimeException if the template cannot be found.
      */
+    #[Output( [ Latte\Engine::class, 'compile' ] )]
     public function getContent( string $name ) : string {
-
-        // TODO : This is where we broke stringLoader rendering of latte templates
         if ( $this->isStringLoader ) {
-
-            $content = 'This is a string loader';
-            // if ( is_array( $this->templates ) ) {
-            //
-            //     $content = $this->templates[ $name ] ?? '';
-            //
-            //     if ( !$content ) {
-            //         if ( $this->logger ) {
-            //             $this->logger->error(
-            //                 'Missing requested template {name}.', [
-            //                 'name'      => $name,
-            //                 'templates' => $this->templates,
-            //                 'backtrace' => debug_backtrace(
-            //                     DEBUG_BACKTRACE_IGNORE_ARGS, 3,
-            //                 ),
-            //             ],
-            //             );
-            //         }
-            //         else {
-            //             throw new Latte\RuntimeException( "Missing template '$name'." );
-            //         }
-            //     }
-            //
-            // }
-            // else {
-            //     $content = $name;
-            // }
-
+            $content = $this->getTemplateString( $name );
         }
         else {
-
-            $file = $this->getTemplatePath( $name );
-
-            if ( !@touch( $file->value ) && $this->isExpired( $name, time() ) ) {
-                Log::error(
-                    "File {filename} modification time is in the future. Cannot update it: {error}",
-                    [ 'filename' => $file->value, 'error' => error_get_last()[ 'message' ] ],
-                );
-            }
-            $content = file_get_contents( $file->value );
+            $content = File::getContents( $this->getTemplatePath( $name ) );
         }
 
         return $this->compile( $content );
     }
 
-    /** Checks whether template has expired.
-     *
-     * * Expired templates will be regenerated on demand.
+    /**
+     * Return a registered string template.
      *
      * @param string  $name
-     * @param int     $time
      *
-     * @return bool
+     * @return string
+     *
+     * @throws Latte\RuntimeException if the template does not exist.
      */
-    public function isExpired( string $name, int $time ) : bool {
+    private function getTemplateString( string $name ) : string {
 
-        if ( $this->isStringLoader ) {
-            return false;
+        // Try to find the requested template by key
+        $template = $this->templates[ $name ] ?? null;
+
+        // If it does not exist, and there is only one template, use it
+        if ( null === $template && count( $this->templates ) === 1 ) {
+            $template = $this->templates[ 0 ] ?? null;
         }
 
-        $mtime = @filemtime( $this->getTemplatePath( $name )->value ); // @ - stat may fail
+        // If it does not exist, and there are no templates, throw an exception
+        if ( !$template ) {
+            throw new Latte\RuntimeException(
+                "Missing string template: '$name'.\nPlease check the templates added to the Loader.",
+            );
+        }
 
-        return !$mtime || $mtime > $time;
+        return $template;
     }
 
-    /** Returns referred template name.
+    /**
+     * Match the template name against the registered directories.
+     *
+     * @param string  $name  Template name
+     *
+     * @return string Path to the template file
+     *
+     * @throws Latte\RuntimeException if the template does not exist.
+     */
+    private function getTemplatePath( string $name ) : string {
+
+        // Check if the Application has the requested template
+        $path = ( $this->directories[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
+
+        // If it does, return the path
+        if ( $path && file_exists( $path ) ) {
+            return $path;
+        }
+
+        // Else, loop through registered template directories until one is found
+        foreach ( $this->directories as $parameter => $path ) {
+            if ( file_exists( $path . $name ) ) {
+                return $path . $name;
+            }
+        }
+
+        // If it does not exist, and there are no templates, throw an exception
+        throw new Latte\RuntimeException( "Missing template file: '$name'." );
+    }
+
+    /**
+     * Returns unique identifier for caching.
+     *
+     * - This is the first method called by {@see Engine::getTemplateClass()}.
+     * - The {@see Engine::generateCacheHash()} method hashes the template content into a unique identifier.
+     *
+     */
+    #[EntryPoint]
+    public function getUniqueId( string $name ) : string {
+
+        $this->isStringLoader = !str_ends_with( $name, '.latte' );
+
+        if ( $this->isStringLoader ) {
+            return Str::key( $this->getContent( $name ) );
+        }
+
+        return PathType::normalize( $this->baseDir = DIRECTORY_SEPARATOR, $name );
+    }
+
+    /**
+     * # ☑️
+     *
+     * Returns referred template name.
+     *
+     * - Will throw a {@see \LogicException} if the template does not exist.
      *
      * @param string  $name
      * @param string  $referringName
@@ -305,82 +361,113 @@ final class Loader implements Latte\Loader
      */
     public function getReferredName( string $name, string $referringName ) : string {
 
-        if ( $this->isStringLoader ) {
-            // if ( $this->templates === null ) {
-            //     throw new LogicException(
-            //         "Missing template '$name'.",
-            //     );
-            // }
+        $this->logger->debug(
+            "Latte Loader: getReferredName( {name}, {referringName} )",
+            [ 'name' => $name, 'referringName' => $referringName ],
+        );
 
-            return $name;
+        if ( $this->isStringLoader && false === $this->hasStringTemplate() ) {
+            throw new MissingTemplateException(
+                "Latte tried parsing the string template '$name'.\nPlease check the templates added to the Loader.",
+                $this->templates,
+                [
+                    'name'          => $name,
+                    'referringName' => $referringName,
+                ],
+            );
         }
 
-        if ( $this->getTemplatePath()->value || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
-            $name = Path::normalize( $referringName . '/../' . $name );
+        if ( $this->baseDir || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
+            $name = PathType::normalize( $referringName . '/../' . $name );
+            Log::debug(
+                "Latte Loader: loading template file '$name'.",
+                [ 'name' => $name, 'referringName' => $referringName ],
+            );
         }
 
         return $name;
     }
 
+
     /**
-     * Returns unique identifier for caching.
+     * Checks whether the Loader has a string template.
      *
-     * * This is the first method called by {@see Engine::getTemplateClass()}.
+     * - Checks for any template by default.
+     * - Pass a string to check for specific template.
      *
-     * @version 1.0.0 ✅
+     * @param null|string  $template
+     *
+     * @return bool
      */
-    #[EntryPoint]
-    public function getUniqueId( string $name ) : string {
-
-        $this->isStringLoader = !str_ends_with( $name, '.latte' );
-
-        $this->uniqueId = $this->isStringLoader ? $this->getContent( $name ) : $this->getTemplatePath( $name )->value;
-
-        Loader::$loadedTemplates[] = $this->uniqueId;
-
-        return $this->uniqueId;
-
-        // if ( $this->isStringLoader ) {
-        //     return $this->getContent( $name );
-        // }
-        //
-        //
-        // /// TODO : If basedir/template.latte does not exist, try __DIR__/templates.latte
-        // /// That way we can have a default template, like _document.latte
-        //
-        // return $this->getTemplatePath( $name )->value;
-
+    public function hasStringTemplate( ?string $template = null ) : bool {
+        return $template ? isset( $this->templates[ $template ] ) : !empty( $this->templates );
     }
 
+    /**
+     * @param string  $name
+     * @param int     $time
+     *
+     * @return bool
+     *
+     * @deprecated Since Latte version 3.0.16
+     * @link       https://github.com/nette/latte/releases/tag/v3.0.16 Deprecated since Latte version 3.0.16
+     */
+    public function isExpired( string $name, int $time ) : bool {
+        return false;
+    }
 
-    /// --------------------------------------------------------------------------------
+    // Support Methods --------------------------------------------------------------
 
+    private function assignDirectories( null | string | array $directories ) : void {
+
+        // Bail if no templates are provided
+        if ( !$directories || ( is_array( $directories ) && empty( $directories ) ) ) {
+            return;
+        }
+
+        if ( is_string( $directories ) ) {
+            $this->directories[ Loader::TEMPLATE_DIR_PARAMETER ] = $directories;
+        }
+        else {
+            $this->directories = $this->filterTemplateArray( $directories );
+        }
+    }
+
+    private function assignTemplates( null | string | array $templates ) : void {
+
+        // Bail if no templates are provided
+        if ( !$templates || ( is_array( $templates ) && empty( $templates ) ) ) {
+            return;
+        }
+
+        if ( is_string( $templates ) ) {
+            $this->templates = [ $templates ];
+        }
+        else {
+            $this->templates = $this->filterTemplateArray( $templates );
+        }
+    }
 
     /**
-     * Returns template from registered template directories.
+     * Filters an array of templates.
      *
-     * @param null|string  $name
+     * - Only assign templates with string keys
+     * - Empty or non-stringable templates will be ignored
      *
-     * @return Path
+     * @param array  $templates
+     *
+     * @return array
      */
-    private function getTemplatePath( ?string $name = null ) : Path {
-
-        // Check if the Application has the requested template
-        $path = ( $this->templateDirs[ Loader::TEMPLATE_DIR_PARAMETER ] ?? null ) . $name;
-
-        // If it does, return the Path
-        if ( $path && file_exists( $path ) ) {
-            return new Path( $path );
-        }
-
-        // Else, loop through registered template directories until one is found
-        foreach ( $this->templateDirs as $parameter => $path ) {
-            if ( file_exists( $path . $name ) ) {
-                return new Path( $path . $name );
-            }
-        }
-
-        throw new Latte\RuntimeException( "Missing template: '$name'." );
+    private function filterTemplateArray( array $templates ) : array {
+        return array_filter(
+            array    : $templates,
+            callback : static fn ( $template, $key ) => (
+                $template &&
+                is_string( $template ) &&
+                is_string( $key )
+            ),
+            mode     : ARRAY_FILTER_USE_BOTH,
+        );
     }
 
 }

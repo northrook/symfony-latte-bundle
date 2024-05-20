@@ -23,6 +23,7 @@ return static function ( ContainerConfigurator $container ) : void {
     // Parameters
     $container->parameters()
               ->set( 'latte.parameter_key.global', 'get' )
+              ->set( 'latte.parameter_key.document', 'document' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
               ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
 
@@ -54,13 +55,14 @@ return static function ( ContainerConfigurator $container ) : void {
                  [
                      param( 'dir.latte.cache' ),
                      param( 'latte.parameter_key.global' ),
-                     service_closure( 'latte.parameters.application' ),
-                     service_closure( 'latte.extension.core' ),
-                     service_closure( 'latte.extension.hook' ),
-                     service_closure( 'latte.hook.loader' ),
-                     service_closure( 'parameter_bag' ),
-                     service_closure( 'logger' )->nullOnInvalid(),
-                     service_closure( 'debug.stopwatch' )->nullOnInvalid(),
+                     param( 'latte.parameter_key.document' ),
+                     service( 'latte.parameters.application' ),
+                     service( 'latte.extension.core' ),
+                     service( 'latte.extension.hook' ),
+                     service( 'latte.hook.loader' ),
+                     service( 'parameter_bag' ),
+                     service( 'logger' )->nullOnInvalid(),
+                     service( 'debug.stopwatch' )->nullOnInvalid(),
                  ],
              );
 
