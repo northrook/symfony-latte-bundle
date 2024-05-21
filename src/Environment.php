@@ -90,14 +90,14 @@ class Environment
      */
     public function render( string $template, object | array | null $parameters = null ) : string {
 
-        $this->latte ??= $this->startEngine();
+        $this->startEngine();
 
         $render = $this->latte->renderToString(
             $template,
             $this->templateParameters( $parameters ),
         );
 
-        $this->stopwatch?->stop( 'engine' );
+        $this->stopwatch?->stop( 'Latte Engine' );
 
         return $render;
     }
@@ -114,10 +114,10 @@ class Environment
         $this->stopwatch?->start( 'Latte Engine', 'Latte' );
 
         // Enable auto-refresh when debugging.
-        if ( !isset( $this->autoRefresh ) && $this->parameterBag->get( 'debug' ) ) {
-            dump( 'Auto-refresh enabled due to env:debug' );
-            $this->autoRefresh = true;
-        }
+        // if ( !isset( $this->autoRefresh ) && $this->parameterBag->get( 'kernel.debug' ) ) {
+        //     $this->logger->info( 'Auto-refresh enabled due to env:debug' );
+        //     $this->autoRefresh = true;
+        // }
 
 
         // Add included extensions.
@@ -136,13 +136,13 @@ class Environment
         $loader ??= new Loader(
             directories : $this->getTemplateDirs(),
             templates   : $this->templateStrings,
-            extensions  : $this->extensions,
+            extensions  : $this->latte->getExtensions(),
             logger      : $this->logger,
             stopwatch   : $this->stopwatch,
         );
 
         $this->latte->setTempDirectory( $this->cacheDir )
-                    ->setAutoRefresh( $this->autoRefresh )
+                    ->setAutoRefresh( $this->autoRefresh ?? false )
                     ->setLoader( $loader );
 
         return $this;

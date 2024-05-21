@@ -24,19 +24,6 @@ final class Loader implements Latte\Loader
 {
     private const TEMPLATE_DIR_PARAMETER = 'dir.latte.templates';
 
-    // »
-    // ␛
-
-    private const ARROW = '%%\-\>%%';
-
-    private const NORMALIZE_VARIABLES = [
-        '{ $'       => '{$',
-        '$}'        => '$}',
-        '{ ('       => '{(',
-        ') }'       => ')}',
-        '%%ARROW%%' => '->',
-    ];
-
     /**
      * List of loaded templates during the current request.
      *
@@ -97,10 +84,7 @@ final class Loader implements Latte\Loader
         private readonly ?LoggerInterface $logger = null,
         private readonly ?Stopwatch       $stopwatch = null,
     ) {
-
-        $this->stopwatch->start( 'Parse Template', 'Latte' );
-
-        $this->assignDirectories( $templates );
+        $this->assignDirectories( $directories );
         $this->assignTemplates( $templates );
     }
 
@@ -132,22 +116,25 @@ final class Loader implements Latte\Loader
             $tags += array_keys( $extensionTags );
         }
 
+        // Only keep n: tags
+        $tags = array_filter( $tags, static fn ( $tag ) => str_starts_with( $tag, 'n:' ) );
+
         // Deduplicate tags
         $tags = array_flip( array_flip( $tags ) );
 
+        // For debugging
         $this->logger->info(
             "Latte Loader: found {count} tags.",
             [ 'count' => count( $tags ) ],
         );
 
+        // Match all found tags
         foreach ( $tags as $tag ) {
             $content = preg_replace_callback(
                 pattern  : "#$tag=\"(.*?)\"#s",
                 callback : static function ( array $match ) use ( $tag ) {
-
-                    dump( $match );
+                    // Variables in n:tags must not be bracketed, trim that and any excess whitespace
                     $value = Trim::whitespace( trim( $match[ 1 ], " {}" ) );
-                    dump( $value );
                     return $value ? "$tag=\"$value\"" : null;
                 },
                 subject  : $content,
@@ -160,30 +147,27 @@ final class Loader implements Latte\Loader
     private function prepareTemplate( string $content ) : string {
 
         // Ensure elements are not broken across multiple lines.
-        $content = preg_replace( '#(<[^>]*?)\R+([^>]*?>)#', '$1$2', $content );
+        $content = preg_replace_callback(
+            pattern  : '#<\s*[a-zA-Z][:a-zA-Z0-9]*\s+[^>]*>#',
+            callback : static fn ( array $match ) => Trim::whitespace(
+                $match[ 0 ], true, true,
+            ),
+            subject  : $content,
+        );
 
         // Safely handle object operators
         $content = preg_replace(
-            '#(->)\w#', // Match all object operators
-            '%%OBJECT_OPERATOR%%$2',
+            '#->(?=\w)#', // Match all object operators
+            '%%OBJECT_OPERATOR%%',
             $content,
         );
 
+        // Ensure proper handling of Latte tags and their variables
         if ( $this->normalizeLatteTags ) {
             $content = $this->handleLatteTags( $content );
         }
 
-        // Ensure elements are not broken across multiple lines.
-        if ( $this->normalizeLatteBrackets ) {
-            $content = preg_replace_callback(
-                '#(->)\w#', // Match all object operators
-                static function ( array $m ) {
-                    return str_replace( '->', '%%ARROW%%', $m[ 0 ] );
-                },
-                $content,
-            );
-        }
-
+        // Remove all comments from the template, they serve not purpose in the compiled template
         if ( $this->purgeComments ) {
             $content = Trim::whitespace( $content );
         }
@@ -241,9 +225,6 @@ final class Loader implements Latte\Loader
             subject : $this->content,
         );
 
-        // Stop the stopwatch
-        $this->stopwatch->stop( 'Parse Template' );
-
         return $this->content;
     }
 
@@ -259,14 +240,23 @@ final class Loader implements Latte\Loader
      */
     #[Output( [ Latte\Engine::class, 'compile' ] )]
     public function getContent( string $name ) : string {
+
+        $name = str_replace( [ '/', '\\' ], DIRECTORY_SEPARATOR, $name );
+
         if ( $this->isStringLoader ) {
-            $content = $this->getTemplateString( $name );
+            $content                                    = $this->getTemplateString( $name );
+            Loader::$loadedTemplates[ $name ][ 'size' ] = strlen( $content );
         }
         else {
-            $content = File::getContents( $this->getTemplatePath( $name ) );
+            $path                                       = $this->getTemplatePath( $name );
+            $content                                    = File::getContents( $path );
+            Loader::$loadedTemplates[ $name ][ 'size' ] = filesize( $path ) . ' bytes';
         }
 
-        return $this->compile( $content );
+        $content = $this->compile( $content );
+
+
+        return $content;
     }
 
     /**
@@ -314,13 +304,13 @@ final class Loader implements Latte\Loader
 
         // If it does, return the path
         if ( $path && file_exists( $path ) ) {
-            return $path;
+            return $this->useTemplate( $name, Loader::TEMPLATE_DIR_PARAMETER, $path, false );
         }
 
         // Else, loop through registered template directories until one is found
         foreach ( $this->directories as $parameter => $path ) {
             if ( file_exists( $path . $name ) ) {
-                return $path . $name;
+                return $this->useTemplate( $name, $path, $path . $name, false );
             }
         }
 
@@ -379,7 +369,7 @@ final class Loader implements Latte\Loader
 
         if ( $this->baseDir || !preg_match( '#/|\\\\|[a-z][a-z0-9+.-]*:#iA', $name ) ) {
             $name = PathType::normalize( $referringName . '/../' . $name );
-            Log::debug(
+            $this->logger->debug(
                 "Latte Loader: loading template file '$name'.",
                 [ 'name' => $name, 'referringName' => $referringName ],
             );
@@ -470,4 +460,40 @@ final class Loader implements Latte\Loader
         );
     }
 
+    public static function getLoadedTemplates() : array {
+        return Loader::$loadedTemplates;
+    }
+
+    private function useTemplate(
+        string $name,
+        string $bundle,
+        string $path,
+        bool   $isStringLoader,
+    ) : string {
+
+        // $name = $isStringLoader ? "string:$name" : "file:$name";
+
+        $source  = array_filter( explode( DIRECTORY_SEPARATOR, $bundle ) );
+        $lastKey = array_key_last( $source );
+
+        if ( $lastKey > 2 && $source[ $lastKey ] === 'templates' ) {
+            $bundle = $source[ $lastKey - 1 ];
+        }
+
+        $path = PathType::normalize( $path );
+
+
+        Loader::$loadedTemplates[ $name ] = [
+            'name'        => $name,
+            'bundle'      => $bundle,
+            'path'        => $path,
+            "size"        => null,
+            'type'        => $isStringLoader ? "string" : "file",
+            'loadedCount' => 0,
+        ];
+
+        Loader::$loadedTemplates[ $name ][ 'loadedCount' ]++;
+
+        return $path;
+    }
 }

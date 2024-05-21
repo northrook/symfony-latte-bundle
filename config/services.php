@@ -25,7 +25,7 @@ return static function ( ContainerConfigurator $container ) : void {
               ->set( 'latte.parameter_key.global', 'get' )
               ->set( 'latte.parameter_key.document', 'document' )
               ->set( 'dir.latte.templates', $fromRoot( "/templates" ) )
-              ->set( 'dir.latte.cache', $fromRoot( "/var/cache/latte" ) );
+              ->set( 'dir.latte.cache', '%kernel.cache_dir%/latte' );
 
     //--------------------------------------------------------------------
     // Latte Environment
