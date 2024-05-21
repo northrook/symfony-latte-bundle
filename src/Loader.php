@@ -460,18 +460,24 @@ final class Loader implements Latte\Loader
         );
     }
 
+
+    /**
+     * Returns an array of templates used by the Loader.
+     *
+     * @return string[]
+     */
     public static function getLoadedTemplates() : array {
         return Loader::$loadedTemplates;
     }
 
+
+    // TODO : Add support for string templates
     private function useTemplate(
         string $name,
         string $bundle,
         string $path,
         bool   $isStringLoader,
     ) : string {
-
-        // $name = $isStringLoader ? "string:$name" : "file:$name";
 
         $source  = array_filter( explode( DIRECTORY_SEPARATOR, $bundle ) );
         $lastKey = array_key_last( $source );
@@ -481,7 +487,6 @@ final class Loader implements Latte\Loader
         }
 
         $path = PathType::normalize( $path );
-
 
         Loader::$loadedTemplates[ $name ] = [
             'name'        => $name,

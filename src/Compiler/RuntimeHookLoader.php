@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Northrook\Symfony\Latte\Compiler;
 
 use Northrook\Core\Cache;
@@ -13,6 +15,7 @@ final class RuntimeHookLoader
     /** @var array<string, int> */
     private array $rendered = [];
 
+    // TODO : Use Symfony Cache
     public function __construct(
         private readonly Cache $cache,
     ) {}
