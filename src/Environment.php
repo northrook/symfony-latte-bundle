@@ -10,7 +10,6 @@ use Northrook\Support\Str;
 use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
 use Northrook\Symfony\Latte\Extension\CoreExtension;
 use Northrook\Symfony\Latte\Extension\RenderHookExtension;
-use Northrook\Symfony\Latte\Variables\Application;
 use Psr\Log\LoggerInterface;
 use Stringable;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -54,15 +53,13 @@ class Environment
     public bool $autoRefresh;
 
     /**
-     * @param string  $cacheDir        The directory to store compiled templates in.
-     * @param string  $applicationKey  The key to use for the {@see Application} variable.
-     * @param string  $documentKey     The key to use for the {@see Document} variable.
+     * @param string  $cacheDir           The directory to store compiled templates in.
+     * @param string  $globalVariableKey  The key to use for the {@see GlobalVariable}.
      */
     public function __construct(
         public readonly string                 $cacheDir,
-        public readonly string                 $applicationKey,
-        public readonly string                 $documentKey,
-        private readonly Application           $applicationVariable,
+        public readonly string                 $globalVariableKey,
+        private readonly GlobalVariable        $globalVariable,
         private readonly CoreExtension         $coreExtension,
         private readonly RenderHookExtension   $renderHookExtension,
         private readonly RuntimeHookLoader     $runtimeHook,
@@ -183,7 +180,7 @@ class Environment
 
         return Environment::parameters(
             [
-                $this->applicationKey => $this->applicationVariable,
+                $this->globalVariableKey => $this->globalVariable,
             ] + $parameters,
         );
     }

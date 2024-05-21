@@ -17,6 +17,8 @@ final class SymfonyLatteBundle extends AbstractBundle
 {
     public function loadExtension( array $config, ContainerConfigurator $container, ContainerBuilder $builder ) : void {
         $container->import( '../config/services.php' );
+        $container->import( '../config/environment.php' );
+
     }
 
     public function getPath() : string {

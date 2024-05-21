@@ -1,22 +1,23 @@
 <?php
 
-namespace Northrook\Symfony\Latte\Variables\Application;
+declare( strict_types = 1 );
 
-use Northrook\Symfony\Latte\Variables\Application;
+namespace Northrook\Symfony\Latte\variables;
+
+use Northrook\Symfony\Latte\GlobalVariable;
 
 /**
- * Return type for {@see Application::getEnv()}
+ * Return type for {@see GlobalVariable::getEnv()}
  *
  * @internal
  *
  * @version 1.0 ✅
  * @author  Martin Nielsen <mn@northrook.com>
  */
-final readonly class Env
+final readonly class ProjectEnvironment
 {
     public function __construct(
         public bool $debug,
-        public bool $authorized,
         public bool $production,
         public bool $staging,
         public bool $dev,
