@@ -6,10 +6,12 @@ use Northrook\Symfony\Latte\Properties\Env;
 use Northrook\Symfony\Latte\variables\ProjectEnvironment;
 use Northrook\Symfony\Latte\Variables\UserAgent;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -104,6 +106,58 @@ final readonly class GlobalVariable
     }
 
     /**
+     * @param string  $name
+     *
+     * @return mixed
+     */
+    public function parameter( string $name ) : mixed {
+
+        $this->parameterBag ??= $this->get( ParameterBagInterface::class );
+
+        if ( !$this->parameterBag->has( $name ) ) {
+            return null;
+        }
+
+        return $this->parameterBag->get( $name );
+    }
+
+    /**
+     * Returns some or all the existing flash messages:
+     *  - getFlashes() returns all the flash messages
+     *  - getFlashes('notice') returns a simple array with flash messages of that type
+     *  - getFlashes(['notice', 'error']) returns a nested array of type => messages.
+     */
+    public function flashes( string | array | null $types = null ) : array {
+
+        try {
+            $session = $this->getSession();
+        }
+        catch ( RuntimeException ) {
+            return [];
+        }
+
+        if ( !$session instanceof FlashBagAwareSessionInterface ) {
+            return [];
+        }
+
+        if ( null === $types || '' === $types || [] === $types ) {
+            return $session->getFlashBag()->all();
+        }
+
+        if ( is_string( $types ) ) {
+            return $session->getFlashBag()->get( $types );
+        }
+
+        $return = [];
+
+        foreach ( $types as $type ) {
+            $return[ $type ] = $session->getFlashBag()->get( $type );
+        }
+
+        return $return;
+    }
+
+    /**
      * @return ProjectEnvironment
      */
     private function getEnv() : ProjectEnvironment {
@@ -146,22 +200,6 @@ final readonly class GlobalVariable
 
     private function getLocale() : string {
         return $this->get( LocaleSwitcher::class )->getLocale();
-    }
-
-    /**
-     * @param string  $name
-     *
-     * @return mixed
-     */
-    public function parameter( string $name ) : mixed {
-
-        $this->parameterBag ??= $this->get( ParameterBagInterface::class );
-
-        if ( !$this->parameterBag->has( $name ) ) {
-            return null;
-        }
-
-        return $this->parameterBag->get( $name );
     }
 
     // -- Support Methods ------------------------------------------------------

@@ -80,12 +80,12 @@ class Environment
      * - Accepts a path to a template file or a template string.
      * - Parses `$parameters` into Latte variables.
      *
-     * @param string             $template
-     * @param object|array|null  $parameters
+     * @param string        $template
+     * @param object|array  $parameters
      *
      * @return string
      */
-    public function render( string $template, object | array | null $parameters = null ) : string {
+    public function render( string $template, object | array $parameters = [] ) : string {
 
         $this->startEngine();
 
@@ -168,11 +168,11 @@ class Environment
     }
 
     /**
-     * @param object|array|null  $parameters
+     * @param object|array  $parameters
      *
      * @return object|array
      */
-    private function templateParameters( object | array | null $parameters ) : object | array {
+    private function templateParameters( object | array $parameters ) : object | array {
 
         if ( is_object( $parameters ) ) {
             return $parameters;
