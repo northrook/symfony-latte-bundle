@@ -150,7 +150,13 @@ class Environment
 
     // ---------------------------------------------------------------------
 
-    public function addGlobalVariable( string $key, string $value ) : self {
+    /**
+     * @param string  $key
+     * @param mixed   $value
+     *
+     * @return $this
+     */
+    public function addGlobalVariable( string $key, mixed $value ) : self {
 
         $this->parameters[ $key ] = $value;
 
