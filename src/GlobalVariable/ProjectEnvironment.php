@@ -2,7 +2,7 @@
 
 declare( strict_types = 1 );
 
-namespace Northrook\Symfony\Latte\variables;
+namespace Northrook\Symfony\Latte\GlobalVariable;
 
 use Northrook\Symfony\Latte\GlobalVariable;
 

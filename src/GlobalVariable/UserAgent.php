@@ -1,6 +1,6 @@
 <?php
 
-namespace Northrook\Symfony\Latte\Variables;
+namespace Northrook\Symfony\Latte\GlobalVariable;
 
 
 use foroco\BrowserDetection;
@@ -8,7 +8,8 @@ use Northrook\Symfony\Latte\GlobalVariable;
 use Psr\Log\LoggerInterface;
 
 
-/** Return Type for {@see GlobalVariable::getUserAgent()}
+/**
+ * Return Type for {@see GlobalVariable::getUserAgent()}
  *
  * @property bool   $isAndroid
  * @property bool   $isApple

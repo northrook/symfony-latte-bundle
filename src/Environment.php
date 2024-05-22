@@ -50,6 +50,9 @@ class Environment
     //❔Tentative
     private array $templateStrings = [];
 
+    // Global parameters for this environment
+    private array $parameters = [];
+
     public bool $autoRefresh;
 
     /**
@@ -58,7 +61,7 @@ class Environment
      */
     public function __construct(
         public readonly string                 $cacheDir,
-        public readonly string                 $globalVariableKey,
+        public readonly ?string                $globalVariableKey,
         private readonly GlobalVariable        $globalVariable,
         private readonly CoreExtension         $coreExtension,
         private readonly RenderHookExtension   $renderHookExtension,
@@ -111,10 +114,10 @@ class Environment
         $this->stopwatch?->start( 'Latte Engine', 'Latte' );
 
         // Enable auto-refresh when debugging.
-        // if ( !isset( $this->autoRefresh ) && $this->parameterBag->get( 'kernel.debug' ) ) {
-        //     $this->logger->info( 'Auto-refresh enabled due to env:debug' );
-        //     $this->autoRefresh = true;
-        // }
+        if ( !isset( $this->autoRefresh ) && $this->parameterBag->get( 'kernel.debug' ) ) {
+            $this->logger->info( 'Auto-refresh enabled due to env:debug' );
+            $this->autoRefresh = true;
+        }
 
 
         // Add included extensions.
@@ -147,6 +150,13 @@ class Environment
 
     // ---------------------------------------------------------------------
 
+    public function addGlobalVariable( string $key, string $value ) : self {
+
+        $this->parameters[ $key ] = $value;
+
+        return $this;
+    }
+
 
     /**
      * Add {@see Latte\Extension}s to this {@see Environment}.
@@ -178,11 +188,11 @@ class Environment
             return $parameters;
         }
 
-        return Environment::parameters(
-            [
-                $this->globalVariableKey => $this->globalVariable,
-            ] + $parameters,
-        );
+        if ( $this->globalVariableKey ) {
+            $this->parameters = array_merge( [ $this->globalVariableKey => $this->globalVariable ], $this->parameters );
+        }
+
+        return Environment::parameters( $this->parameters + $parameters );
     }
 
     /**

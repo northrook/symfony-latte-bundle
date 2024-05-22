@@ -2,6 +2,7 @@
 
 namespace Northrook\Symfony\Latte\Preprocessor;
 
+use JetBrains\PhpStorm\Deprecated;
 use Northrook\Support\Str;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -13,6 +14,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * @link    https://github.com/northrook Documentation
  * @todo    Update URL to documentation
  */
+#[Deprecated]
 abstract class Preprocessor implements PreprocessorInterface
 {
 

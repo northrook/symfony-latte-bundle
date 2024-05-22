@@ -2,9 +2,8 @@
 
 namespace Northrook\Symfony\Latte;
 
-use Northrook\Symfony\Latte\Properties\Env;
-use Northrook\Symfony\Latte\variables\ProjectEnvironment;
-use Northrook\Symfony\Latte\Variables\UserAgent;
+use Northrook\Symfony\Latte\GlobalVariable\ProjectEnvironment;
+use Northrook\Symfony\Latte\GlobalVariable\UserAgent;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;

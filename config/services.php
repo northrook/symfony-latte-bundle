@@ -13,14 +13,8 @@ return static function ( ContainerConfigurator $container ) : void {
 
     $services = $container->services();
 
-    // $fromRoot = static fn ( string $set = '' ) => '%kernel.project_dir%' . DIRECTORY_SEPARATOR . trim(
-    //         str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $set ), DIRECTORY_SEPARATOR,
-    //     ) . DIRECTORY_SEPARATOR;
-
-
     // Parameters
     $container->parameters()
-              ->set( 'latte.global_variable.key', 'get' )
               ->set( 'dir.latte.templates', '%kernel.project_dir%/templates' )
               ->set( 'dir.latte.cache', '%kernel.cache_dir%/latte' );
 

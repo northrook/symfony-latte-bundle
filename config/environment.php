@@ -21,7 +21,30 @@ use Symfony\Component\Translation\LocaleSwitcher;
 
 return static function ( ContainerConfigurator $container ) : void {
 
+
+    /**
+     * The parameter key used to access the  {@see GlobalVariable} in every template.
+     *
+     * - Overriding this parameter will change the key used to access the global variable.
+     * - Setting this parameter to `null` will disable the global variable.
+     */
+    $container->parameters()->set( 'latte.global_variable.key', 'get' );
+
     $services = $container->services();
+
+    /**
+     * Latte Global Variable, injected into every template by the included {@see Loader}.
+     *
+     * - Variable key defaults to `get`, this can be changed by overriding the `latte.parameter_key.global` parameter.
+     */
+    $services->set( 'latte.global_variable', GlobalVariable::class )
+             ->args(
+                 [
+                     param( 'kernel.environment' ),               // Environment<string>
+                     param( 'kernel.debug' ),                     // Debug<bool>
+                     service( 'latte.service.locator' ),
+                 ],
+             );
 
 
     /**
@@ -43,27 +66,5 @@ return static function ( ContainerConfigurator $container ) : void {
                  ],
              )
              ->public();
-
-
-    // 'request_stack'   => service( 'request_stack' ),
-    //                      'router'          => service( 'router' ),
-    //                      'token_storage'   => service( 'security.token_storage' ),
-    //                      'locale_switcher' => service( 'translation.locale_switcher' )->nullOnInvalid(),
-    //                      'token_manager'   => service( 'security.csrf.token_manager' ),
-    //                      'logger'          => service( 'logger' )->nullOnInvalid(),
-
-    /**
-     * Latte Global Variable, injected into every template by the included {@see Loader}.
-     *
-     * - Variable key defaults to `get`, this can be changed by overriding the `latte.parameter_key.global` parameter.
-     */
-    $services->set( 'latte.global_variable', GlobalVariable::class )
-             ->args(
-                 [
-                     param( 'kernel.environment' ),               // Environment<string>
-                     param( 'kernel.debug' ),                     // Debug<bool>
-                     service( 'latte.service.locator' ),
-                 ],
-             );
 
 };
