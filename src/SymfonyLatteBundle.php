@@ -5,6 +5,8 @@ declare( strict_types = 1 );
 namespace Northrook\Symfony\Latte;
 
 use Northrook\Latte;
+use Northrook\Symfony\Latte\DependencyInjection\UrlGeneratorExtension;
+use Northrook\Symfony\Latte\Runtime\App;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
@@ -29,6 +31,8 @@ final class SymfonyLatteBundle extends AbstractBundle
         ContainerBuilder      $builder,
     ) : void {
 
+        $container->import( '../config/runtime.php' );
+
         $builder->setParameter( 'dir.cache.latte', "%kernel.cache_dir%/latte", );
 
         $services = $container->services();
@@ -45,7 +49,9 @@ final class SymfonyLatteBundle extends AbstractBundle
                          service( 'logger' )->nullOnInvalid(),
                          '%kernel.debug%',
                      ],
-                 );
+                 )
+                 ->call( 'addGlobalVariable', [ 'get', service( App::class ) ] )
+                 ->call( 'addExtension', [ service( UrlGeneratorExtension::class ) ] );
     }
 
     public function getPath() : string {

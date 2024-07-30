@@ -3,7 +3,6 @@
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 
-use Northrook\Core\Cache;
 use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
 use Northrook\Symfony\Latte\Environment;
 use Northrook\Symfony\Latte\Extension\CoreExtension;
@@ -53,6 +52,13 @@ return static function ( ContainerConfigurator $container ) : void {
                      service( 'parameter_bag' ),
                      service( 'logger' )->nullOnInvalid(),
                      service( 'debug.stopwatch' )->nullOnInvalid(),
+                 ],
+             );
+    $services->set( 'latte.extension.hook', RenderHookExtension::class )
+             ->args(
+                 [
+                     service( 'latte.hook.loader' ),
+                     service( 'logger' )->nullOnInvalid(),
                  ],
              );
 };

@@ -24,7 +24,9 @@
     "symfony/dependency-injection": "^7.1",
     "symfony/http-foundation": "^7.1",
     "symfony/filesystem": "^7.1",
-    "northrook/latte-environment": "dev-main"
+    "northrook/latte-environment": "dev-main",
+    "symfony/routing": "^7.1",
+    "symfony/security-csrf": "^7.1"
   },
   "require-dev": {
     "northrook/dev-env": "dev-main",
