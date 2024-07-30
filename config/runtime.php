@@ -32,22 +32,4 @@ return static function ( ContainerConfigurator $container ) : void {
 
     $services->set( UrlGeneratorExtension::class )
              ->args( [ service( 'router' ) ] );
-
-
-    // $services->set( 'latte.environment', Environment::class )
-    //          ->args(
-    //              [
-    //                  param( 'dir.latte.cache' ),
-    //                  param( 'latte.global_variable.key' ),
-    //                  service( 'latte.global_variable' ),
-    //                  service( 'latte.extension.core' ),
-    //                  service( 'latte.extension.hook' ),
-    //                  service( 'latte.hook.loader' ),
-    //                  service( 'parameter_bag' ),
-    //                  service( 'logger' )->nullOnInvalid(),
-    //                  service( 'debug.stopwatch' )->nullOnInvalid(),
-    //              ],
-    //          )
-    //          ->call( 'addGlobalVariable', [] )
-    //          ->call( 'addExtension', );
 };
