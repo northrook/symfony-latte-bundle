@@ -26,7 +26,8 @@
     "symfony/filesystem": "^7.1",
     "northrook/latte-environment": "dev-main",
     "symfony/routing": "^7.1",
-    "symfony/security-csrf": "^7.1"
+    "symfony/security-csrf": "^7.1",
+    "symfony/security-core": "^7.1"
   },
   "require-dev": {
     "northrook/dev-env": "dev-main",

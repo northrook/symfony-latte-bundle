@@ -22,11 +22,15 @@ return static function ( ContainerConfigurator $container ) : void {
     $services->set( App::class )
              ->args(
                  [
+                     param( 'kernel.environment' ),
+                     param( 'kernel.debug' ),
+                     service( 'request_stack' ),
+                     service( 'security.token_storage' ),
                      service( 'security.csrf.token_manager' ),
                  ],
              );
 
-    $services->set(  UrlGeneratorExtension::class )
+    $services->set( UrlGeneratorExtension::class )
              ->args( [ service( 'router' ) ] );
 
 
