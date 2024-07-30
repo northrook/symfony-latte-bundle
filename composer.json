@@ -5,7 +5,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Northrook\\Symfony\\Latte\\": "src/"
+      "Northrook\\Symfony\\Latte\\": "src"
     }
   },
   "authors": [
@@ -15,31 +15,19 @@
     }
   ],
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "php": ">=8.2",
     "northrook/core": "dev-main",
     "northrook/logger": "dev-main",
-    "latte/latte": "^3.0",
-    "symfony/config": "^7.0",
-    "symfony/dependency-injection": "^7.0",
-    "symfony/deprecation-contracts": "^3.0",
-    "symfony/http-kernel": "^7.0",
-    "northrook/types": "dev-main",
-    "northrook/support": "dev-main",
-    "foroco/php-browser-detection": "^2.7",
-    "symfony/filesystem": "^7",
-    "northrook/elements": "dev-main",
-    "ext-fileinfo": "*",
-    "ext-gd": "*",
-    "northrook/favicon": "dev-main"
+    "symfony/http-kernel": "^7.1",
+    "symfony/dependency-injection": "^7.1",
+    "symfony/http-foundation": "^7.1",
+    "symfony/filesystem": "^7.1",
+    "northrook/latte-environment": "dev-main"
   },
   "require-dev": {
-    "roave/security-advisories": "dev-latest",
-    "symfony/framework-bundle": "^7.0",
-    "symfony/web-profiler-bundle": "^7",
-    "symfony/stopwatch": "7",
-    "symfony/security-bundle": "7.1.x-dev",
-    "symfony/translation": "7.1.x-dev",
-    "northrook/symfony-core-bundle": "dev-main"
+    "northrook/dev-env": "dev-main",
+    "symfony/cache": "^7.1"
   }
 }

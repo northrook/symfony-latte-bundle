@@ -14,6 +14,7 @@
 /public/
 /var/
 /build/
+/_temp/
 /*.php
 /*.twig
 /*.latte
