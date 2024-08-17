@@ -8,11 +8,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 // Runtime Application Accessor
 //--------------------------------------------------------------------
 
-use Northrook\Symfony\Latte\Compiler\RuntimeHookLoader;
 use Northrook\Symfony\Latte\DependencyInjection\UrlGeneratorExtension;
 use Northrook\Symfony\Latte\Environment;
-use Northrook\Symfony\Latte\Extension\CoreExtension;
-use Northrook\Symfony\Latte\Extension\RenderHookExtension;
 use Northrook\Symfony\Latte\Runtime\App;
 
 return static function ( ContainerConfigurator $container ) : void {
