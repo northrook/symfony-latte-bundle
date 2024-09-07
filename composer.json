@@ -18,13 +18,9 @@
   "prefer-stable": true,
   "require": {
     "php": ">=8.2",
+    "symfony/dependency-injection": "@stable",
     "northrook/core": "dev-main",
-    "northrook/logger": "dev-main",
-    "symfony/http-kernel": "^7.1",
-    "symfony/dependency-injection": "^7.1",
-    "symfony/http-foundation": "^7.1",
-    "symfony/filesystem": "^7.1",
-    "northrook/latte-environment": "dev-main",
+    "northrook/latte-bundle": "dev-main",
     "symfony/routing": "^7.1",
     "symfony/security-csrf": "^7.1",
     "symfony/security-core": "^7.1"

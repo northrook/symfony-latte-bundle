@@ -13,15 +13,17 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use function Northrook\normalizePath;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
+
 // Should put Latte on parity with Twig
 // Cache through northrook/symfony-latte-cache
 
+
 /**
- * @version 1.0 ☑️
+ * @todo    Update URL to documentation : root of symfony-latte-bundle
  * @author  Martin Nielsen <mn@northrook.com>
  *
  * @link    https://github.com/northrook Documentation
- * @todo    Update URL to documentation : root of symfony-latte-bundle
+ * @version 1.0 ☑️
  */
 final class SymfonyLatteBundle extends AbstractBundle
 {
@@ -29,32 +31,37 @@ final class SymfonyLatteBundle extends AbstractBundle
         array                 $config,
         ContainerConfigurator $container,
         ContainerBuilder      $builder,
-    ) : void {
-
+    ) : void
+    {
         $container->import( '../config/runtime.php' );
 
-        $builder->setParameter( 'dir.cache.latte', "%kernel.cache_dir%/latte", );
+        $builder->setParameter( 'dir.cache.latte', "%kernel.cache_dir%/latte" );
 
         $services = $container->services();
 
-        $services->defaults()
-                 ->autowire();
+        $services
+            ->defaults()
+            ->autowire()
+        ;
 
-        $services->set( Latte::class )
-                 ->args(
-                     [
-                         normalizePath( '%kernel.project_dir%' ),
-                         normalizePath( '%dir.cache.latte%' ),
-                         service( 'debug.stopwatch' )->nullOnInvalid(),
-                         service( 'logger' )->nullOnInvalid(),
-                         '%kernel.debug%',
-                     ],
-                 )
-                 ->call( 'addGlobalVariable', [ 'get', service( App::class ) ] )
-                 ->call( 'addExtension', [ service( UrlGeneratorExtension::class ) ] );
+        $services
+            ->set( Latte::class )
+            ->args(
+                [
+                    normalizePath( '%kernel.project_dir%' ),
+                    normalizePath( '%dir.cache.latte%' ),
+                    service( 'debug.stopwatch' )->nullOnInvalid(),
+                    service( 'logger' )->nullOnInvalid(),
+                    '%kernel.debug%',
+                ],
+            )
+            ->call( 'addGlobalVariable', [ 'get', service( App::class ) ] )
+            ->call( 'addExtension', [ service( UrlGeneratorExtension::class ) ] )
+        ;
     }
 
-    public function getPath() : string {
+    public function getPath() : string
+    {
         return dirname( __DIR__ );
     }
 }
