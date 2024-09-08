@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use function Northrook\normalizePath;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 
@@ -50,9 +51,10 @@ final class SymfonyLatteBundle extends AbstractBundle
                 [
                     normalizePath( '%kernel.project_dir%' ),
                     normalizePath( '%dir.cache.latte%' ),
+                    param( 'kernel.default_locale' ),
                     service( 'debug.stopwatch' )->nullOnInvalid(),
                     service( 'logger' )->nullOnInvalid(),
-                    '%kernel.debug%',
+                    param( 'kernel.debug' ),
                 ],
             )
             ->call( 'addGlobalVariable', [ 'get', service( App::class ) ] )
