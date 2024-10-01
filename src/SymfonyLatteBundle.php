@@ -7,10 +7,10 @@ namespace Northrook\Symfony\Latte;
 use Northrook\Latte;
 use Northrook\Symfony\Latte\DependencyInjection\UrlGeneratorExtension;
 use Northrook\Symfony\Latte\Runtime\App;
+use Support\Normalize;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
-use function Northrook\normalizePath;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
@@ -49,8 +49,8 @@ final class SymfonyLatteBundle extends AbstractBundle
             ->set( Latte::class )
             ->args(
                 [
-                    normalizePath( '%kernel.project_dir%' ),
-                    normalizePath( '%dir.cache.latte%' ),
+                    Normalize::path( '%kernel.project_dir%' ),
+                    Normalize::path( '%dir.cache.latte%' ),
                     param( 'kernel.default_locale' ),
                     service( 'debug.stopwatch' )->nullOnInvalid(),
                     service( 'logger' )->nullOnInvalid(),

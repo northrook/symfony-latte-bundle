@@ -17,7 +17,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "symfony/dependency-injection": "@stable",
     "northrook/core": "dev-main",
     "northrook/latte-bundle": "dev-main",
